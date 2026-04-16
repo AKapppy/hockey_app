@@ -104,13 +104,18 @@ def _latest_value(table: dict[str, list[float | None]], team_code: str) -> float
 
 
 def _copy_logo_assets(out_dir: Path) -> None:
-    src = Path(__file__).resolve().parents[1] / "assets" / "nhl_logos"
+    assets_src = Path(__file__).resolve().parents[1] / "assets"
+    src = assets_src / "nhl_logos"
     dst = out_dir / "assets" / "nhl_logos"
     dst.mkdir(parents=True, exist_ok=True)
     if not src.exists():
         return
     for png in sorted(src.glob("*.png")):
         shutil.copy2(png, dst / png.name)
+    cup_src = assets_src / "stanley_cup.png"
+    if cup_src.exists():
+        (out_dir / "assets").mkdir(parents=True, exist_ok=True)
+        shutil.copy2(cup_src, out_dir / "assets" / "stanley_cup.png")
 
 
 def build_payload(
