@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hockey-app"
+version = "0.1.0"
+description = "Desktop and static web hockey probability dashboard."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "pandas>=2.0",
+  "requests>=2.0",
+  "pillow>=10.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["hockey_app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

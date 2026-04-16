@@ -1,0 +1,33 @@
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Local/runtime data
+cache/
+MoneyPuck Data/
+*.part
+
+# Local notes and exports
+notes.txt
+*.key
+
+# Keep the GitHub Pages build tracked.
+!docs/
+!docs/**

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hockey App</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">MoneyPuck probabilities</p>
+        <h1>Hockey App</h1>
+      </div>
+      <div class="status" id="data-status">Loading data</div>
+    </header>
+
+    <main class="shell">
+      <section class="controls" aria-label="Dashboard controls">
+        <div class="metric-tabs" id="metric-tabs"></div>
+        <label class="search-label">
+          <span>Find team</span>
+          <input id="team-search" type="search" autocomplete="off" placeholder="Team or code">
+        </label>
+      </section>
+
+      <section class="summary-grid" id="summary-grid" aria-label="Summary"></section>
+
+      <section class="chart-section" aria-labelledby="chart-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow" id="chart-kicker">Trend</p>
+            <h2 id="chart-heading">Playoff Race</h2>
+          </div>
+          <label class="team-picker">
+            <span>Highlight</span>
+            <select id="team-select"></select>
+          </label>
+        </div>
+        <div class="chart-wrap" id="chart-wrap"></div>
+      </section>
+
+      <section class="table-section" aria-labelledby="table-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Latest snapshot</p>
+            <h2 id="table-heading">Teams</h2>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Team</th>
+                <th scope="col">Conference</th>
+                <th scope="col">Division</th>
+                <th scope="col" class="number">Current</th>
+                <th scope="col" class="number">7 days</th>
+                <th scope="col">Trend</th>
+              </tr>
+            </thead>
+            <tbody id="team-table"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

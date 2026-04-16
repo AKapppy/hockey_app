@@ -1,0 +1,5401 @@
+{
+  "boxscore": {
+    "teams": [
+      {
+        "team": {
+          "id": "71",
+          "uid": "s:70~l:20147~t:71",
+          "slug": "sweden",
+          "location": "Sweden",
+          "name": "Sweden",
+          "abbreviation": "SWE",
+          "displayName": "Sweden",
+          "shortDisplayName": "Sweden",
+          "logo": "https://a.espncdn.com/i/teamlogos/countries/500/swe.png"
+        },
+        "statistics": [
+          {
+            "name": "blockedShots",
+            "abbreviation": "BS",
+            "displayValue": "0",
+            "label": "Blocked Shots"
+          },
+          {
+            "name": "hits",
+            "abbreviation": "HT",
+            "displayValue": "0",
+            "label": "Hits"
+          },
+          {
+            "name": "takeaways",
+            "abbreviation": "TK",
+            "displayValue": "0",
+            "label": "Takeaways"
+          },
+          {
+            "name": "shotsTotal",
+            "abbreviation": "S",
+            "displayValue": "14",
+            "label": "Shots"
+          },
+          {
+            "name": "powerPlayGoals",
+            "abbreviation": "PPG",
+            "displayValue": "0",
+            "label": "Power Play Goals"
+          },
+          {
+            "name": "powerPlayOpportunities",
+            "abbreviation": "PPO",
+            "displayValue": "2",
+            "label": "Power Play Opportunities"
+          },
+          {
+            "name": "powerPlayPct",
+            "abbreviation": "PCT",
+            "displayValue": "0.0",
+            "label": "Power Play Percentage"
+          },
+          {
+            "name": "shortHandedGoals",
+            "abbreviation": "SHG",
+            "displayValue": "0",
+            "label": "Short Handed Goals"
+          },
+          {
+            "name": "shootoutGoals",
+            "abbreviation": "SOG",
+            "displayValue": "0",
+            "label": "Shootout Goals"
+          },
+          {
+            "name": "faceoffsWon",
+            "abbreviation": "FW",
+            "displayValue": "0",
+            "label": "Faceoffs Won"
+          },
+          {
+            "name": "faceoffPercent",
+            "abbreviation": "FO%",
+            "displayValue": "0.0",
+            "label": "Faceoff Win Percent"
+          },
+          {
+            "name": "giveaways",
+            "abbreviation": "GV",
+            "displayValue": "0",
+            "label": "Giveaways"
+          },
+          {
+            "name": "penalties",
+            "abbreviation": "PN",
+            "displayValue": "1",
+            "label": "Total Penalties"
+          },
+          {
+            "name": "penaltyMinutes",
+            "abbreviation": "PIM",
+            "displayValue": "2",
+            "label": "Penalty Minutes"
+          }
+        ],
+        "displayOrder": 1,
+        "homeAway": "away"
+      },
+      {
+        "team": {
+          "id": "79",
+          "uid": "s:70~l:20147~t:79",
+          "slug": "united-states",
+          "location": "United States",
+          "name": "United States",
+          "abbreviation": "USA",
+          "displayName": "United States",
+          "shortDisplayName": "United States",
+          "logo": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png"
+        },
+        "statistics": [
+          {
+            "name": "blockedShots",
+            "abbreviation": "BS",
+            "displayValue": "0",
+            "label": "Blocked Shots"
+          },
+          {
+            "name": "hits",
+            "abbreviation": "HT",
+            "displayValue": "0",
+            "label": "Hits"
+          },
+          {
+            "name": "takeaways",
+            "abbreviation": "TK",
+            "displayValue": "0",
+            "label": "Takeaways"
+          },
+          {
+            "name": "shotsTotal",
+            "abbreviation": "S",
+            "displayValue": "22",
+            "label": "Shots"
+          },
+          {
+            "name": "powerPlayGoals",
+            "abbreviation": "PPG",
+            "displayValue": "0",
+            "label": "Power Play Goals"
+          },
+          {
+            "name": "powerPlayOpportunities",
+            "abbreviation": "PPO",
+            "displayValue": "1",
+            "label": "Power Play Opportunities"
+          },
+          {
+            "name": "powerPlayPct",
+            "abbreviation": "PCT",
+            "displayValue": "0.0",
+            "label": "Power Play Percentage"
+          },
+          {
+            "name": "shortHandedGoals",
+            "abbreviation": "SHG",
+            "displayValue": "0",
+            "label": "Short Handed Goals"
+          },
+          {
+            "name": "shootoutGoals",
+            "abbreviation": "SOG",
+            "displayValue": "0",
+            "label": "Shootout Goals"
+          },
+          {
+            "name": "faceoffsWon",
+            "abbreviation": "FW",
+            "displayValue": "0",
+            "label": "Faceoffs Won"
+          },
+          {
+            "name": "faceoffPercent",
+            "abbreviation": "FO%",
+            "displayValue": "0.0",
+            "label": "Faceoff Win Percent"
+          },
+          {
+            "name": "giveaways",
+            "abbreviation": "GV",
+            "displayValue": "0",
+            "label": "Giveaways"
+          },
+          {
+            "name": "penalties",
+            "abbreviation": "PN",
+            "displayValue": "2",
+            "label": "Total Penalties"
+          },
+          {
+            "name": "penaltyMinutes",
+            "abbreviation": "PIM",
+            "displayValue": "4",
+            "label": "Penalty Minutes"
+          }
+        ],
+        "displayOrder": 2,
+        "homeAway": "home"
+      }
+    ],
+    "players": [
+      {
+        "team": {
+          "id": "71",
+          "uid": "s:70~l:20147~t:71",
+          "slug": "sweden",
+          "location": "Sweden",
+          "name": "Sweden",
+          "abbreviation": "SWE",
+          "displayName": "Sweden",
+          "shortDisplayName": "Sweden",
+          "logo": "https://a.espncdn.com/i/teamlogos/countries/500/swe.png"
+        },
+        "statistics": [
+          {
+            "name": "forwards",
+            "keys": [
+              "blockedShots",
+              "hits",
+              "takeaways",
+              "plusMinus",
+              "timeOnIce",
+              "powerPlayTimeOnIce",
+              "shortHandedTimeOnIce",
+              "evenStrengthTimeOnIce",
+              "shifts",
+              "goals",
+              "ytdGoals",
+              "assists",
+              "shotsTotal",
+              "shotsMissed",
+              "shootoutGoals",
+              "faceoffsWon",
+              "faceoffsLost",
+              "faceoffPercent",
+              "giveaways",
+              "penalties",
+              "penaltyMinutes"
+            ],
+            "labels": [
+              "BS",
+              "HT",
+              "TK",
+              "+/-",
+              "TOI",
+              "PPTOI",
+              "SHTOI",
+              "ESTOI",
+              "SHFT",
+              "G",
+              "YTDG",
+              "A",
+              "S",
+              "SM",
+              "SOG",
+              "FW",
+              "FL",
+              "FO%",
+              "GV",
+              "PN",
+              "PIM"
+            ],
+            "descriptions": [
+              "Total shots blocked.",
+              "Total hits.",
+              "Total takeaways.",
+              "Plus/Minus Rating",
+              "Total time on ice.",
+              "Total power play time on ice.",
+              "Total short handed time on ice.",
+              "Total even strength time on ice.",
+              "Total shifts.",
+              "Total goals scored.",
+              "Year to date goals/",
+              "Total goal assists.",
+              "Total shots.",
+              "Total missed shots.",
+              "Total shootout goals.",
+              "Total faceoffs won.",
+              "Total faceoffs lost.",
+              "Percentage of faceoffs won.",
+              "Total giveaways.",
+              "Total number of penalties.",
+              "Total penalty minutes."
+            ],
+            "athletes": [
+              {
+                "athlete": {
+                  "id": "4915359",
+                  "uid": "s:70~l:20147~a:4915359",
+                  "lastName": "Bouveng",
+                  "displayName": "Josefin Bouveng",
+                  "shortName": "J. Bouveng",
+                  "jersey": "11",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "5273253",
+                  "uid": "s:70~l:20147~a:5273253",
+                  "lastName": "Hall",
+                  "displayName": "Nicole Hall",
+                  "shortName": "N. Hall",
+                  "jersey": "89",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "5332649",
+                  "uid": "s:70~l:20147~a:5332649",
+                  "lastName": "Hallin",
+                  "displayName": "Mira Hallin",
+                  "shortName": "M. Hallin",
+                  "jersey": "34",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "5332648",
+                  "uid": "s:70~l:20147~a:5332648",
+                  "lastName": "Hedqvist",
+                  "displayName": "Ebba Hedqvist",
+                  "shortName": "E. Hedqvist",
+                  "jersey": "24",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4294175",
+                  "uid": "s:70~l:20147~a:4294175",
+                  "lastName": "Hjalmarsson",
+                  "displayName": "Sara Hjalmarsson",
+                  "shortName": "S. Hjalmarsson",
+                  "jersey": "19",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "-1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "1",
+                  "2"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4294176",
+                  "uid": "s:70~l:20147~a:4294176",
+                  "lastName": "Johansson",
+                  "displayName": "Lisa Johansson",
+                  "shortName": "L. Johansson",
+                  "jersey": "15",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "-1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "5273191",
+                  "uid": "s:70~l:20147~a:5273191",
+                  "lastName": "Johansson",
+                  "displayName": "Thea Johansson",
+                  "shortName": "T. Johansson",
+                  "jersey": "23",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "-1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "2",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4915361",
+                  "uid": "s:70~l:20147~a:4915361",
+                  "lastName": "Ljungblom",
+                  "displayName": "Lina Ljungblom",
+                  "shortName": "L. Ljungblom",
+                  "jersey": "25",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4915362",
+                  "uid": "s:70~l:20147~a:4915362",
+                  "lastName": "Lundin",
+                  "displayName": "Sofie Lundin",
+                  "shortName": "S. Lundin",
+                  "jersey": "17",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4294178",
+                  "uid": "s:70~l:20147~a:4294178",
+                  "lastName": "Olsson",
+                  "displayName": "Hanna Olsson",
+                  "shortName": "H. Olsson",
+                  "jersey": "26",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "-1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "5332646",
+                  "uid": "s:70~l:20147~a:5332646",
+                  "lastName": "Svensson",
+                  "displayName": "Hilda Svensson",
+                  "shortName": "H. Svensson",
+                  "jersey": "8",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "-1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "2",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "5332647",
+                  "uid": "s:70~l:20147~a:5332647",
+                  "lastName": "Thuvik",
+                  "displayName": "Hanna Thuvik",
+                  "shortName": "H. Thuvik",
+                  "jersey": "22",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "-1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4915364",
+                  "uid": "s:70~l:20147~a:4915364",
+                  "lastName": "Wikner-Zienkiewicz",
+                  "displayName": "Felizia Wikner-Zienkiewicz",
+                  "shortName": "F. Wikner-Zienkiewicz",
+                  "jersey": "29",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "defenses",
+            "keys": [
+              "blockedShots",
+              "hits",
+              "takeaways",
+              "plusMinus",
+              "timeOnIce",
+              "powerPlayTimeOnIce",
+              "shortHandedTimeOnIce",
+              "evenStrengthTimeOnIce",
+              "shifts",
+              "goals",
+              "ytdGoals",
+              "assists",
+              "shotsTotal",
+              "shotsMissed",
+              "shootoutGoals",
+              "faceoffsWon",
+              "faceoffsLost",
+              "faceoffPercent",
+              "giveaways",
+              "penalties",
+              "penaltyMinutes"
+            ],
+            "labels": [
+              "BS",
+              "HT",
+              "TK",
+              "+/-",
+              "TOI",
+              "PPTOI",
+              "SHTOI",
+              "ESTOI",
+              "SHFT",
+              "G",
+              "YTDG",
+              "A",
+              "S",
+              "SM",
+              "SOG",
+              "FW",
+              "FL",
+              "FO%",
+              "GV",
+              "PN",
+              "PIM"
+            ],
+            "descriptions": [
+              "Total shots blocked.",
+              "Total hits.",
+              "Total takeaways.",
+              "Plus/Minus Rating",
+              "Total time on ice.",
+              "Total power play time on ice.",
+              "Total short handed time on ice.",
+              "Total even strength time on ice.",
+              "Total shifts.",
+              "Total goals scored.",
+              "Year to date goals/",
+              "Total goal assists.",
+              "Total shots.",
+              "Total missed shots.",
+              "Total shootout goals.",
+              "Total faceoffs won.",
+              "Total faceoffs lost.",
+              "Percentage of faceoffs won.",
+              "Total giveaways.",
+              "Total number of penalties.",
+              "Total penalty minutes."
+            ],
+            "athletes": [
+              {
+                "athlete": {
+                  "id": "4915354",
+                  "uid": "s:70~l:20147~a:4915354",
+                  "lastName": "Adolfsson",
+                  "displayName": "Jessica Adolfsson",
+                  "shortName": "J. Adolfsson",
+                  "jersey": "9",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/4?lang=en&region=us",
+                    "id": "4",
+                    "name": "Defense",
+                    "displayName": "Defense",
+                    "abbreviation": "D",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4917480",
+                  "uid": "s:70~l:20147~a:4917480",
+                  "lastName": "Andersson",
+                  "displayName": "Linnea Andersson",
+                  "shortName": "L. Andersson",
+                  "jersey": "4",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/4?lang=en&region=us",
+                    "id": "4",
+                    "name": "Defense",
+                    "displayName": "Defense",
+                    "abbreviation": "D",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "5272955",
+                  "uid": "s:70~l:20147~a:5272955",
+                  "lastName": "Jungaker",
+                  "displayName": "Mira Jungaker",
+                  "shortName": "M. Jungaker",
+                  "jersey": "7",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/4?lang=en&region=us",
+                    "id": "4",
+                    "name": "Defense",
+                    "displayName": "Defense",
+                    "abbreviation": "D",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "-1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "2",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "5273057",
+                  "uid": "s:70~l:20147~a:5273057",
+                  "lastName": "Karlsson",
+                  "displayName": "Ida Karlsson",
+                  "shortName": "I. Karlsson",
+                  "jersey": "14",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/4?lang=en&region=us",
+                    "id": "4",
+                    "name": "Defense",
+                    "displayName": "Defense",
+                    "abbreviation": "D",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4915357",
+                  "uid": "s:70~l:20147~a:4915357",
+                  "lastName": "Kjellbin",
+                  "displayName": "Anna Kjellbin",
+                  "shortName": "A. Kjellbin",
+                  "jersey": "71",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/4?lang=en&region=us",
+                    "id": "4",
+                    "name": "Defense",
+                    "displayName": "Defense",
+                    "abbreviation": "D",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "-1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4294171",
+                  "uid": "s:70~l:20147~a:4294171",
+                  "lastName": "Nylen-Persson",
+                  "displayName": "Maja Nylen-Persson",
+                  "shortName": "M. Nylen-Persson",
+                  "jersey": "12",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/4?lang=en&region=us",
+                    "id": "4",
+                    "name": "Defense",
+                    "displayName": "Defense",
+                    "abbreviation": "D",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "-2",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "goalies",
+            "keys": [
+              "goalsAgainst",
+              "shotsAgainst",
+              "shootoutSaves",
+              "shootoutShotsAgainst",
+              "saves",
+              "savePct",
+              "evenStrengthSaves",
+              "powerPlaySaves",
+              "shortHandedSaves",
+              "timeOnIce",
+              "ytdGoals",
+              "penaltyMinutes"
+            ],
+            "labels": [
+              "GA",
+              "SA",
+              "SOS",
+              "SOSA",
+              "SV",
+              "SV%",
+              "ESSV",
+              "PPSV",
+              "SHSV",
+              "TOI",
+              "YTDG",
+              "PIM"
+            ],
+            "descriptions": [
+              "Total goals against.",
+              "Total shots against.",
+              "Total shootout saves.",
+              "Total shootout shots against.",
+              "Total saves.",
+              "Percentage of shots saved.",
+              "Saves made at even strength.",
+              "Saves made while in a power play.",
+              "Saves made while shorthanded",
+              "Total time on ice.",
+              "Year to date goals/",
+              "Total penalty minutes."
+            ],
+            "athletes": [
+              {
+                "athlete": {
+                  "id": "5332643",
+                  "uid": "s:70~l:20147~a:5332643",
+                  "lastName": "Svensson Traff",
+                  "displayName": "Ebba Svensson Traff",
+                  "shortName": "E. Svensson Traff",
+                  "jersey": "1",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/5?lang=en&region=us",
+                    "id": "5",
+                    "name": "Goaltender",
+                    "displayName": "Goaltender",
+                    "abbreviation": "G",
+                    "leaf": false
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "3",
+                  "22",
+                  "0",
+                  "0",
+                  "19",
+                  ".864",
+                  "0",
+                  "0",
+                  "0",
+                  "0:01",
+                  "0",
+                  "0"
+                ]
+              }
+            ]
+          }
+        ],
+        "displayOrder": 1
+      },
+      {
+        "team": {
+          "id": "79",
+          "uid": "s:70~l:20147~t:79",
+          "slug": "united-states",
+          "location": "United States",
+          "name": "United States",
+          "abbreviation": "USA",
+          "displayName": "United States",
+          "shortDisplayName": "United States",
+          "logo": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png"
+        },
+        "statistics": [
+          {
+            "name": "forwards",
+            "keys": [
+              "blockedShots",
+              "hits",
+              "takeaways",
+              "plusMinus",
+              "timeOnIce",
+              "powerPlayTimeOnIce",
+              "shortHandedTimeOnIce",
+              "evenStrengthTimeOnIce",
+              "shifts",
+              "goals",
+              "ytdGoals",
+              "assists",
+              "shotsTotal",
+              "shotsMissed",
+              "shootoutGoals",
+              "faceoffsWon",
+              "faceoffsLost",
+              "faceoffPercent",
+              "giveaways",
+              "penalties",
+              "penaltyMinutes"
+            ],
+            "labels": [
+              "BS",
+              "HT",
+              "TK",
+              "+/-",
+              "TOI",
+              "PPTOI",
+              "SHTOI",
+              "ESTOI",
+              "SHFT",
+              "G",
+              "YTDG",
+              "A",
+              "S",
+              "SM",
+              "SOG",
+              "FW",
+              "FL",
+              "FO%",
+              "GV",
+              "PN",
+              "PIM"
+            ],
+            "descriptions": [
+              "Total shots blocked.",
+              "Total hits.",
+              "Total takeaways.",
+              "Plus/Minus Rating",
+              "Total time on ice.",
+              "Total power play time on ice.",
+              "Total short handed time on ice.",
+              "Total even strength time on ice.",
+              "Total shifts.",
+              "Total goals scored.",
+              "Year to date goals/",
+              "Total goal assists.",
+              "Total shots.",
+              "Total missed shots.",
+              "Total shootout goals.",
+              "Total faceoffs won.",
+              "Total faceoffs lost.",
+              "Percentage of faceoffs won.",
+              "Total giveaways.",
+              "Total number of penalties.",
+              "Total penalty minutes."
+            ],
+            "athletes": [
+              {
+                "athlete": {
+                  "id": "5332768",
+                  "uid": "s:70~l:20147~a:5332768",
+                  "lastName": "Bilka",
+                  "displayName": "Hannah Bilka",
+                  "shortName": "H. Bilka",
+                  "jersey": "23",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "2",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "3087874",
+                  "uid": "s:70~l:20147~a:3087874",
+                  "lastName": "Carpenter",
+                  "displayName": "Alex Carpenter",
+                  "shortName": "A. Carpenter",
+                  "jersey": "25",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "2",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "3087879",
+                  "uid": "s:70~l:20147~a:3087879",
+                  "lastName": "Coyne",
+                  "displayName": "Kendall Coyne",
+                  "shortName": "K. Coyne",
+                  "jersey": "26",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "5332767",
+                  "uid": "s:70~l:20147~a:5332767",
+                  "lastName": "Curl",
+                  "displayName": "Britta Curl",
+                  "shortName": "B. Curl",
+                  "jersey": "17",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "5272956",
+                  "uid": "s:70~l:20147~a:5272956",
+                  "lastName": "Dunne",
+                  "displayName": "Joy Dunne",
+                  "shortName": "J. Dunne",
+                  "jersey": "24",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "3",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "5332769",
+                  "uid": "s:70~l:20147~a:5332769",
+                  "lastName": "Heise",
+                  "displayName": "Taylor Heise",
+                  "shortName": "T. Heise",
+                  "jersey": "27",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "1",
+                  "0",
+                  "0",
+                  "4",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "5273247",
+                  "uid": "s:70~l:20147~a:5273247",
+                  "lastName": "Janecke",
+                  "displayName": "Tessa Janecke",
+                  "shortName": "T. Janecke",
+                  "jersey": "22",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "2498939",
+                  "uid": "s:70~l:20147~a:2498939",
+                  "lastName": "Knight",
+                  "displayName": "Hilary Knight",
+                  "shortName": "H. Knight",
+                  "jersey": "21",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4913613",
+                  "uid": "s:70~l:20147~a:4913613",
+                  "lastName": "Murphy",
+                  "displayName": "Abbey Murphy",
+                  "shortName": "A. Murphy",
+                  "jersey": "37",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "1",
+                  "0",
+                  "1",
+                  "3",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4293499",
+                  "uid": "s:70~l:20147~a:4293499",
+                  "lastName": "Pannek",
+                  "displayName": "Kelly Pannek",
+                  "shortName": "K. Pannek",
+                  "jersey": "12",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4913609",
+                  "uid": "s:70~l:20147~a:4913609",
+                  "lastName": "Scamurra",
+                  "displayName": "Hayley Scamurra",
+                  "shortName": "H. Scamurra",
+                  "jersey": "16",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "1",
+                  "2"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "5263100",
+                  "uid": "s:70~l:20147~a:5263100",
+                  "lastName": "Simms",
+                  "displayName": "Kirsten Simms",
+                  "shortName": "K. Simms",
+                  "jersey": "9",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "1",
+                  "2"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4913607",
+                  "uid": "s:70~l:20147~a:4913607",
+                  "lastName": "Zumwinkle",
+                  "displayName": "Grace Zumwinkle",
+                  "shortName": "G. Zumwinkle",
+                  "jersey": "13",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/20?lang=en&region=us",
+                    "id": "20",
+                    "name": "Forward",
+                    "displayName": "Forward",
+                    "abbreviation": "F",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "2",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "defenses",
+            "keys": [
+              "blockedShots",
+              "hits",
+              "takeaways",
+              "plusMinus",
+              "timeOnIce",
+              "powerPlayTimeOnIce",
+              "shortHandedTimeOnIce",
+              "evenStrengthTimeOnIce",
+              "shifts",
+              "goals",
+              "ytdGoals",
+              "assists",
+              "shotsTotal",
+              "shotsMissed",
+              "shootoutGoals",
+              "faceoffsWon",
+              "faceoffsLost",
+              "faceoffPercent",
+              "giveaways",
+              "penalties",
+              "penaltyMinutes"
+            ],
+            "labels": [
+              "BS",
+              "HT",
+              "TK",
+              "+/-",
+              "TOI",
+              "PPTOI",
+              "SHTOI",
+              "ESTOI",
+              "SHFT",
+              "G",
+              "YTDG",
+              "A",
+              "S",
+              "SM",
+              "SOG",
+              "FW",
+              "FL",
+              "FO%",
+              "GV",
+              "PN",
+              "PIM"
+            ],
+            "descriptions": [
+              "Total shots blocked.",
+              "Total hits.",
+              "Total takeaways.",
+              "Plus/Minus Rating",
+              "Total time on ice.",
+              "Total power play time on ice.",
+              "Total short handed time on ice.",
+              "Total even strength time on ice.",
+              "Total shifts.",
+              "Total goals scored.",
+              "Year to date goals/",
+              "Total goal assists.",
+              "Total shots.",
+              "Total missed shots.",
+              "Total shootout goals.",
+              "Total faceoffs won.",
+              "Total faceoffs lost.",
+              "Percentage of faceoffs won.",
+              "Total giveaways.",
+              "Total number of penalties.",
+              "Total penalty minutes."
+            ],
+            "athletes": [
+              {
+                "athlete": {
+                  "id": "4293493",
+                  "uid": "s:70~l:20147~a:4293493",
+                  "lastName": "Barnes",
+                  "displayName": "Cayla Barnes",
+                  "shortName": "C. Barnes",
+                  "jersey": "3",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/4?lang=en&region=us",
+                    "id": "4",
+                    "name": "Defense",
+                    "displayName": "Defense",
+                    "abbreviation": "D",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "1",
+                  "0",
+                  "0",
+                  "1",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "5263086",
+                  "uid": "s:70~l:20147~a:5263086",
+                  "lastName": "Edwards",
+                  "displayName": "Laila Edwards",
+                  "shortName": "L. Edwards",
+                  "jersey": "10",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/4?lang=en&region=us",
+                    "id": "4",
+                    "name": "Defense",
+                    "displayName": "Defense",
+                    "abbreviation": "D",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "2",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "5272971",
+                  "uid": "s:70~l:20147~a:5272971",
+                  "lastName": "Guilday",
+                  "displayName": "Rory Guilday",
+                  "shortName": "R. Guilday",
+                  "jersey": "6",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/4?lang=en&region=us",
+                    "id": "4",
+                    "name": "Defense",
+                    "displayName": "Defense",
+                    "abbreviation": "D",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4913605",
+                  "uid": "s:70~l:20147~a:4913605",
+                  "lastName": "Harvey",
+                  "displayName": "Caroline Harvey",
+                  "shortName": "C. Harvey",
+                  "jersey": "4",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/4?lang=en&region=us",
+                    "id": "4",
+                    "name": "Defense",
+                    "displayName": "Defense",
+                    "abbreviation": "D",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "2",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4293494",
+                  "uid": "s:70~l:20147~a:4293494",
+                  "lastName": "Keller",
+                  "displayName": "Megan Keller",
+                  "shortName": "M. Keller",
+                  "jersey": "5",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/4?lang=en&region=us",
+                    "id": "4",
+                    "name": "Defense",
+                    "displayName": "Defense",
+                    "abbreviation": "D",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "3087873",
+                  "uid": "s:70~l:20147~a:3087873",
+                  "lastName": "Stecklein",
+                  "displayName": "Lee Stecklein",
+                  "shortName": "L. Stecklein",
+                  "jersey": "2",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/4?lang=en&region=us",
+                    "id": "4",
+                    "name": "Defense",
+                    "displayName": "Defense",
+                    "abbreviation": "D",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "5263051",
+                  "uid": "s:70~l:20147~a:5263051",
+                  "lastName": "Winn",
+                  "displayName": "Haley Winn",
+                  "shortName": "H. Winn",
+                  "jersey": "8",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/4?lang=en&region=us",
+                    "id": "4",
+                    "name": "Defense",
+                    "displayName": "Defense",
+                    "abbreviation": "D",
+                    "leaf": false,
+                    "parent": {
+                      "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/27?lang=en&region=us"
+                    }
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0:00",
+                  "0",
+                  "0",
+                  "0",
+                  "1",
+                  "1",
+                  "0",
+                  "0",
+                  "0",
+                  "0",
+                  "0.0",
+                  "0",
+                  "0",
+                  "0"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "goalies",
+            "keys": [
+              "goalsAgainst",
+              "shotsAgainst",
+              "shootoutSaves",
+              "shootoutShotsAgainst",
+              "saves",
+              "savePct",
+              "evenStrengthSaves",
+              "powerPlaySaves",
+              "shortHandedSaves",
+              "timeOnIce",
+              "ytdGoals",
+              "penaltyMinutes"
+            ],
+            "labels": [
+              "GA",
+              "SA",
+              "SOS",
+              "SOSA",
+              "SV",
+              "SV%",
+              "ESSV",
+              "PPSV",
+              "SHSV",
+              "TOI",
+              "YTDG",
+              "PIM"
+            ],
+            "descriptions": [
+              "Total goals against.",
+              "Total shots against.",
+              "Total shootout saves.",
+              "Total shootout shots against.",
+              "Total saves.",
+              "Percentage of shots saved.",
+              "Saves made at even strength.",
+              "Saves made while in a power play.",
+              "Saves made while shorthanded",
+              "Total time on ice.",
+              "Year to date goals/",
+              "Total penalty minutes."
+            ],
+            "athletes": [
+              {
+                "athlete": {
+                  "id": "5332765",
+                  "uid": "s:70~l:20147~a:5332765",
+                  "lastName": "Frankel",
+                  "displayName": "Aerin Frankel",
+                  "shortName": "A. Frankel",
+                  "jersey": "31",
+                  "position": {
+                    "$ref": "http://sports.core.api.espn.pvt/v2/sports/hockey/leagues/olympics-womens-ice-hockey/positions/5?lang=en&region=us",
+                    "id": "5",
+                    "name": "Goaltender",
+                    "displayName": "Goaltender",
+                    "abbreviation": "G",
+                    "leaf": false
+                  },
+                  "active": true,
+                  "links": [],
+                  "scratched": false
+                },
+                "stats": [
+                  "0",
+                  "14",
+                  "0",
+                  "0",
+                  "14",
+                  "1.000",
+                  "0",
+                  "0",
+                  "0",
+                  "0:01",
+                  "0",
+                  "0"
+                ]
+              }
+            ]
+          }
+        ],
+        "displayOrder": 2
+      }
+    ]
+  },
+  "format": {
+    "regulation": {
+      "periods": 3,
+      "displayName": "Period",
+      "slug": "period",
+      "clock": 1200
+    }
+  },
+  "gameInfo": {
+    "venue": {
+      "id": "11773",
+      "fullName": "Milano Santagiulia Ice Hockey Arena",
+      "address": {
+        "city": "Milano",
+        "country": "Italy"
+      },
+      "grass": false,
+      "images": []
+    }
+  },
+  "lastFiveGames": [
+    {
+      "displayOrder": 2,
+      "team": {
+        "id": "79",
+        "uid": "s:70~l:20147~t:79",
+        "displayName": "United States",
+        "abbreviation": "USA",
+        "logo": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+        "logos": [
+          {
+            "href": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+            "alt": "United States",
+            "rel": [
+              "country-flag",
+              "full",
+              "default"
+            ]
+          }
+        ]
+      },
+      "events": [
+        {
+          "id": "401845609",
+          "links": [
+            {
+              "href": "https://www.espn.com/olympics-womens-ice-hockey/game/_/gameId/401845609/czechia-united-states",
+              "text": "Gamecast"
+            }
+          ],
+          "atVs": "vs",
+          "gameDate": "2026-02-05T15:40Z",
+          "score": "5-1",
+          "homeTeamId": "79",
+          "awayTeamId": "21",
+          "homeTeamScore": "5",
+          "awayTeamScore": "1",
+          "homeAggregateScore": "0",
+          "awayAggregateScore": "0",
+          "homeShootoutScore": "0",
+          "awayShootoutScore": "0",
+          "gameResult": "W",
+          "opponent": {
+            "id": "21",
+            "uid": "s:70~l:20147~t:21",
+            "displayName": "Czechia",
+            "abbreviation": "CZE",
+            "logo": "https://a.espncdn.com/i/teamlogos/countries/500/cze.png",
+            "logos": [
+              {
+                "href": "https://a.espncdn.com/i/teamlogos/countries/500/cze.png",
+                "alt": "Czech Republic",
+                "rel": [
+                  "country-flag",
+                  "full",
+                  "default"
+                ]
+              }
+            ]
+          },
+          "opponentLogo": "https://a.espncdn.com/i/teamlogos/countries/500/cze.png",
+          "leagueName": "Women's Ice Hockey",
+          "leagueAbbreviation": "Women's Ice Hockey"
+        },
+        {
+          "id": "401845615",
+          "links": [
+            {
+              "href": "https://www.espn.com/olympics-womens-ice-hockey/game/_/gameId/401845615/finland-united-states",
+              "text": "Gamecast"
+            }
+          ],
+          "atVs": "vs",
+          "gameDate": "2026-02-07T15:40Z",
+          "score": "5-0",
+          "homeTeamId": "79",
+          "awayTeamId": "25",
+          "homeTeamScore": "5",
+          "awayTeamScore": "0",
+          "homeAggregateScore": "0",
+          "awayAggregateScore": "0",
+          "homeShootoutScore": "0",
+          "awayShootoutScore": "0",
+          "gameResult": "W",
+          "leagueName": "Women's Ice Hockey",
+          "leagueAbbreviation": "Women's Ice Hockey",
+          "opponent": {
+            "id": "25",
+            "uid": "s:70~l:20147~t:25",
+            "displayName": "Finland",
+            "abbreviation": "FIN",
+            "logo": "https://a.espncdn.com/i/teamlogos/countries/500/fin.png",
+            "logos": [
+              {
+                "href": "https://a.espncdn.com/i/teamlogos/countries/500/fin.png",
+                "alt": "Finland",
+                "rel": [
+                  "country-flag",
+                  "full",
+                  "default"
+                ]
+              }
+            ]
+          },
+          "opponentLogo": "https://a.espncdn.com/i/teamlogos/countries/500/fin.png"
+        },
+        {
+          "id": "401845621",
+          "links": [
+            {
+              "href": "https://www.espn.com/olympics-womens-ice-hockey/game/_/gameId/401845621/united-states-switzerland",
+              "text": "Gamecast"
+            }
+          ],
+          "atVs": "vs",
+          "gameDate": "2026-02-09T19:40Z",
+          "score": "5-0",
+          "homeTeamId": "72",
+          "awayTeamId": "79",
+          "homeTeamScore": "0",
+          "awayTeamScore": "5",
+          "homeAggregateScore": "0",
+          "awayAggregateScore": "0",
+          "homeShootoutScore": "0",
+          "awayShootoutScore": "0",
+          "gameResult": "W",
+          "leagueName": "Women's Ice Hockey",
+          "leagueAbbreviation": "Women's Ice Hockey",
+          "opponent": {
+            "id": "72",
+            "uid": "s:70~l:20147~t:72",
+            "displayName": "Switzerland",
+            "abbreviation": "SUI",
+            "logo": "https://a.espncdn.com/i/teamlogos/countries/500/sui.png",
+            "logos": [
+              {
+                "href": "https://a.espncdn.com/i/teamlogos/countries/500/sui.png",
+                "alt": "Switzerland",
+                "rel": [
+                  "country-flag",
+                  "full",
+                  "default"
+                ]
+              }
+            ]
+          },
+          "opponentLogo": "https://a.espncdn.com/i/teamlogos/countries/500/sui.png"
+        },
+        {
+          "id": "401845625",
+          "links": [
+            {
+              "href": "https://www.espn.com/olympics-womens-ice-hockey/game/_/gameId/401845625/united-states-canada",
+              "text": "Gamecast"
+            }
+          ],
+          "atVs": "vs",
+          "gameDate": "2026-02-10T19:10Z",
+          "score": "5-0",
+          "homeTeamId": "16",
+          "awayTeamId": "79",
+          "homeTeamScore": "0",
+          "awayTeamScore": "5",
+          "homeAggregateScore": "0",
+          "awayAggregateScore": "0",
+          "homeShootoutScore": "0",
+          "awayShootoutScore": "0",
+          "gameResult": "W",
+          "leagueName": "Women's Ice Hockey",
+          "leagueAbbreviation": "Women's Ice Hockey",
+          "opponent": {
+            "id": "16",
+            "uid": "s:70~l:20147~t:16",
+            "displayName": "Canada",
+            "abbreviation": "CAN",
+            "logo": "https://a.espncdn.com/i/teamlogos/countries/500/can.png",
+            "logos": [
+              {
+                "href": "https://a.espncdn.com/i/teamlogos/countries/500/can.png",
+                "alt": "Canada",
+                "rel": [
+                  "country-flag",
+                  "full",
+                  "default"
+                ]
+              }
+            ]
+          },
+          "opponentLogo": "https://a.espncdn.com/i/teamlogos/countries/500/can.png"
+        },
+        {
+          "id": "401845776",
+          "links": [
+            {
+              "href": "https://www.espn.com/olympics-womens-ice-hockey/game/_/gameId/401845776/italy-united-states",
+              "text": "Gamecast"
+            }
+          ],
+          "atVs": "vs",
+          "gameDate": "2026-02-13T20:10Z",
+          "score": "6-0",
+          "homeTeamId": "79",
+          "awayTeamId": "48105",
+          "homeTeamScore": "6",
+          "awayTeamScore": "0",
+          "homeAggregateScore": "0",
+          "awayAggregateScore": "0",
+          "homeShootoutScore": "0",
+          "awayShootoutScore": "0",
+          "gameResult": "W",
+          "leagueName": "Women's Ice Hockey",
+          "leagueAbbreviation": "Women's Ice Hockey",
+          "opponent": {
+            "id": "48105",
+            "uid": "s:70~l:20147~t:48105",
+            "displayName": "Italy",
+            "abbreviation": "ITA",
+            "logo": "https://a.espncdn.com/i/teamlogos/countries/500/ita.png",
+            "logos": [
+              {
+                "href": "https://a.espncdn.com/i/teamlogos/countries/500/ita.png",
+                "alt": "Italy",
+                "rel": [
+                  "country-flag",
+                  "full",
+                  "default"
+                ]
+              }
+            ]
+          },
+          "opponentLogo": "https://a.espncdn.com/i/teamlogos/countries/500/ita.png"
+        }
+      ]
+    },
+    {
+      "displayOrder": 1,
+      "team": {
+        "id": "71",
+        "uid": "s:70~l:20147~t:71",
+        "displayName": "Sweden",
+        "abbreviation": "SWE",
+        "logo": "https://a.espncdn.com/i/teamlogos/countries/500/swe.png",
+        "logos": [
+          {
+            "href": "https://a.espncdn.com/i/teamlogos/countries/500/swe.png",
+            "alt": "Sweden",
+            "rel": [
+              "country-flag",
+              "full",
+              "default"
+            ]
+          }
+        ]
+      },
+      "events": [
+        {
+          "id": "401845607",
+          "links": [
+            {
+              "href": "https://www.espn.com/olympics-womens-ice-hockey/game/_/gameId/401845607/germany-sweden",
+              "text": "Gamecast"
+            }
+          ],
+          "atVs": "vs",
+          "gameDate": "2026-02-05T11:10Z",
+          "score": "4-1",
+          "homeTeamId": "71",
+          "awayTeamId": "48099",
+          "homeTeamScore": "4",
+          "awayTeamScore": "1",
+          "homeAggregateScore": "0",
+          "awayAggregateScore": "0",
+          "homeShootoutScore": "0",
+          "awayShootoutScore": "0",
+          "gameResult": "W",
+          "leagueName": "Women's Ice Hockey",
+          "leagueAbbreviation": "Women's Ice Hockey",
+          "opponent": {
+            "id": "48099",
+            "uid": "s:70~l:20147~t:48099",
+            "displayName": "Germany",
+            "abbreviation": "GER",
+            "logo": "https://a.espncdn.com/i/teamlogos/countries/500/ger.png",
+            "logos": [
+              {
+                "href": "https://a.espncdn.com/i/teamlogos/countries/500/ger.png",
+                "alt": "Germany",
+                "rel": [
+                  "country-flag",
+                  "full",
+                  "default"
+                ]
+              }
+            ]
+          },
+          "opponentLogo": "https://a.espncdn.com/i/teamlogos/countries/500/ger.png"
+        },
+        {
+          "id": "401845614",
+          "links": [
+            {
+              "href": "https://www.espn.com/olympics-womens-ice-hockey/game/_/gameId/401845614/italy-sweden",
+              "text": "Gamecast"
+            }
+          ],
+          "atVs": "vs",
+          "gameDate": "2026-02-07T13:40Z",
+          "score": "6-1",
+          "homeTeamId": "71",
+          "awayTeamId": "48105",
+          "homeTeamScore": "6",
+          "awayTeamScore": "1",
+          "homeAggregateScore": "0",
+          "awayAggregateScore": "0",
+          "homeShootoutScore": "0",
+          "awayShootoutScore": "0",
+          "gameResult": "W",
+          "leagueName": "Women's Ice Hockey",
+          "leagueAbbreviation": "Women's Ice Hockey",
+          "opponent": {
+            "id": "48105",
+            "uid": "s:70~l:20147~t:48105",
+            "displayName": "Italy",
+            "abbreviation": "ITA",
+            "logo": "https://a.espncdn.com/i/teamlogos/countries/500/ita.png",
+            "logos": [
+              {
+                "href": "https://a.espncdn.com/i/teamlogos/countries/500/ita.png",
+                "alt": "Italy",
+                "rel": [
+                  "country-flag",
+                  "full",
+                  "default"
+                ]
+              }
+            ]
+          },
+          "opponentLogo": "https://a.espncdn.com/i/teamlogos/countries/500/ita.png"
+        },
+        {
+          "id": "401845617",
+          "links": [
+            {
+              "href": "https://www.espn.com/olympics-womens-ice-hockey/game/_/gameId/401845617/sweden-france",
+              "text": "Gamecast"
+            }
+          ],
+          "atVs": "vs",
+          "gameDate": "2026-02-08T15:40Z",
+          "score": "4-0",
+          "homeTeamId": "132244",
+          "awayTeamId": "71",
+          "homeTeamScore": "0",
+          "awayTeamScore": "4",
+          "homeAggregateScore": "0",
+          "awayAggregateScore": "0",
+          "homeShootoutScore": "0",
+          "awayShootoutScore": "0",
+          "gameResult": "W",
+          "leagueName": "Women's Ice Hockey",
+          "leagueAbbreviation": "Women's Ice Hockey",
+          "opponent": {
+            "id": "132244",
+            "uid": "s:70~l:20147~t:132244",
+            "displayName": "France",
+            "abbreviation": "FRA",
+            "logo": "https://a.espncdn.com/i/teamlogos/countries/500/fra.png",
+            "logos": [
+              {
+                "href": "https://a.espncdn.com/i/teamlogos/countries/500/fra.png",
+                "alt": "France",
+                "rel": [
+                  "country-flag",
+                  "full",
+                  "default"
+                ]
+              }
+            ]
+          },
+          "opponentLogo": "https://a.espncdn.com/i/teamlogos/countries/500/fra.png"
+        },
+        {
+          "id": "401845623",
+          "links": [
+            {
+              "href": "https://www.espn.com/olympics-womens-ice-hockey/game/_/gameId/401845623/sweden-japan",
+              "text": "Gamecast"
+            }
+          ],
+          "atVs": "vs",
+          "gameDate": "2026-02-10T11:10Z",
+          "score": "4-0",
+          "homeTeamId": "40",
+          "awayTeamId": "71",
+          "homeTeamScore": "0",
+          "awayTeamScore": "4",
+          "homeAggregateScore": "0",
+          "awayAggregateScore": "0",
+          "homeShootoutScore": "0",
+          "awayShootoutScore": "0",
+          "gameResult": "W",
+          "leagueName": "Women's Ice Hockey",
+          "leagueAbbreviation": "Women's Ice Hockey",
+          "opponent": {
+            "id": "40",
+            "uid": "s:70~l:20147~t:40",
+            "displayName": "Japan",
+            "abbreviation": "JPN",
+            "logo": "https://a.espncdn.com/i/teamlogos/countries/500/jpn.png",
+            "logos": [
+              {
+                "href": "https://a.espncdn.com/i/teamlogos/countries/500/jpn.png",
+                "alt": "Japan",
+                "rel": [
+                  "country-flag",
+                  "full",
+                  "default"
+                ]
+              }
+            ]
+          },
+          "opponentLogo": "https://a.espncdn.com/i/teamlogos/countries/500/jpn.png"
+        },
+        {
+          "id": "401845775",
+          "links": [
+            {
+              "href": "https://www.espn.com/olympics-womens-ice-hockey/game/_/gameId/401845775/sweden-czechia",
+              "text": "Gamecast"
+            }
+          ],
+          "atVs": "vs",
+          "gameDate": "2026-02-13T15:40Z",
+          "score": "2-0",
+          "homeTeamId": "21",
+          "awayTeamId": "71",
+          "homeTeamScore": "0",
+          "awayTeamScore": "2",
+          "homeAggregateScore": "0",
+          "awayAggregateScore": "0",
+          "homeShootoutScore": "0",
+          "awayShootoutScore": "0",
+          "gameResult": "W",
+          "leagueName": "Women's Ice Hockey",
+          "leagueAbbreviation": "Women's Ice Hockey",
+          "opponent": {
+            "id": "21",
+            "uid": "s:70~l:20147~t:21",
+            "displayName": "Czechia",
+            "abbreviation": "CZE",
+            "logo": "https://a.espncdn.com/i/teamlogos/countries/500/cze.png",
+            "logos": [
+              {
+                "href": "https://a.espncdn.com/i/teamlogos/countries/500/cze.png",
+                "alt": "Czech Republic",
+                "rel": [
+                  "country-flag",
+                  "full",
+                  "default"
+                ]
+              }
+            ]
+          },
+          "opponentLogo": "https://a.espncdn.com/i/teamlogos/countries/500/cze.png"
+        }
+      ]
+    }
+  ],
+  "broadcasts": [],
+  "plays": [
+    {
+      "id": "40184577905065",
+      "sequenceNumber": "1",
+      "type": {
+        "id": "505",
+        "text": "Goal",
+        "abbreviation": "goal"
+      },
+      "text": "Extra Attacker Goal Scored by Cayla Barnes assisted by Kelly Pannek and Lee Stecklein",
+      "awayScore": 0,
+      "homeScore": 1,
+      "period": {
+        "number": 1,
+        "displayValue": "1st"
+      },
+      "clock": {
+        "displayValue": "5:09"
+      },
+      "scoringPlay": true,
+      "scoreValue": 1,
+      "modified": "2026-02-16T16:59Z",
+      "team": {
+        "id": "79"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "id": "4293493",
+            "displayName": "Cayla Barnes",
+            "shortName": "C. Barnes"
+          },
+          "type": "scorer",
+          "ytdGoals": 1
+        },
+        {
+          "athlete": {
+            "id": "4293499",
+            "displayName": "Kelly Pannek",
+            "shortName": "K. Pannek"
+          },
+          "type": "assister",
+          "ytdAssists": 2
+        },
+        {
+          "athlete": {
+            "id": "3087873",
+            "displayName": "Lee Stecklein",
+            "shortName": "L. Stecklein"
+          },
+          "type": "assister",
+          "ytdAssists": 2
+        }
+      ],
+      "wallclock": "2026-02-16T16:59:04Z",
+      "shootingPlay": true,
+      "strength": {
+        "id": "701",
+        "text": "Even Strength",
+        "abbreviation": "even-strength"
+      },
+      "shotInfo": {
+        "id": "901",
+        "text": "None",
+        "abbreviation": "regular"
+      }
+    },
+    {
+      "id": "40184577905091",
+      "sequenceNumber": "1",
+      "type": {
+        "id": "7",
+        "text": "Boarding",
+        "abbreviation": "Boarding",
+        "penaltyMinutes": "2",
+        "penaltyType": "Minor"
+      },
+      "text": "Penalty to Sara Hjalmarsson 2 minutes for Boarding",
+      "awayScore": 0,
+      "homeScore": 0,
+      "period": {
+        "number": 1,
+        "displayValue": "1st"
+      },
+      "clock": {
+        "displayValue": "8:21"
+      },
+      "scoringPlay": false,
+      "scoreValue": 0,
+      "modified": "2026-02-16T15:53Z",
+      "team": {
+        "id": "71"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "id": "4294175",
+            "displayName": "Sara Hjalmarsson",
+            "shortName": "S. Hjalmarsson"
+          },
+          "ytdGoals": 2
+        }
+      ],
+      "wallclock": "2026-02-16T16:59:04Z",
+      "shootingPlay": true
+    },
+    {
+      "id": "40184577905092",
+      "sequenceNumber": "2",
+      "type": {
+        "id": "55",
+        "text": "Tripping",
+        "abbreviation": "Tripping",
+        "penaltyMinutes": "2",
+        "penaltyType": "Minor"
+      },
+      "text": "Penalty to Hayley Scamurra 2 minutes for Tripping",
+      "awayScore": 0,
+      "homeScore": 0,
+      "period": {
+        "number": 2,
+        "displayValue": "2nd"
+      },
+      "clock": {
+        "displayValue": "6:00"
+      },
+      "scoringPlay": false,
+      "scoreValue": 0,
+      "modified": "2026-02-16T16:39Z",
+      "team": {
+        "id": "79"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "id": "4913609",
+            "displayName": "Hayley Scamurra",
+            "shortName": "H. Scamurra"
+          },
+          "ytdGoals": 2
+        }
+      ],
+      "wallclock": "2026-02-16T16:59:04Z",
+      "shootingPlay": true
+    },
+    {
+      "id": "40184577905093",
+      "sequenceNumber": "2",
+      "type": {
+        "id": "505",
+        "text": "Goal",
+        "abbreviation": "goal"
+      },
+      "text": "Even Strength Goal Scored by Taylor Heise assisted by Hannah Bilka and Abbey Murphy",
+      "awayScore": 0,
+      "homeScore": 2,
+      "period": {
+        "number": 2,
+        "displayValue": "2nd"
+      },
+      "clock": {
+        "displayValue": "9:09"
+      },
+      "scoringPlay": true,
+      "scoreValue": 1,
+      "modified": "2026-02-16T16:59Z",
+      "team": {
+        "id": "79"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "id": "5332769",
+            "displayName": "Taylor Heise",
+            "shortName": "T. Heise"
+          },
+          "type": "scorer",
+          "ytdGoals": 2
+        },
+        {
+          "athlete": {
+            "id": "5332768",
+            "displayName": "Hannah Bilka",
+            "shortName": "H. Bilka"
+          },
+          "type": "assister",
+          "ytdAssists": 2
+        },
+        {
+          "athlete": {
+            "id": "4913613",
+            "displayName": "Abbey Murphy",
+            "shortName": "A. Murphy"
+          },
+          "type": "assister",
+          "ytdAssists": 5
+        }
+      ],
+      "wallclock": "2026-02-16T16:59:04Z",
+      "shootingPlay": true,
+      "strength": {
+        "id": "701",
+        "text": "Even Strength",
+        "abbreviation": "even-strength"
+      },
+      "shotInfo": {
+        "id": "901",
+        "text": "None",
+        "abbreviation": "regular"
+      }
+    },
+    {
+      "id": "40184577905094",
+      "sequenceNumber": "3",
+      "type": {
+        "id": "37",
+        "text": "Interference",
+        "abbreviation": "Interference",
+        "penaltyMinutes": "2",
+        "penaltyType": "Minor"
+      },
+      "text": "Penalty to Kirsten Simms 2 minutes for Interference",
+      "awayScore": 0,
+      "homeScore": 0,
+      "period": {
+        "number": 2,
+        "displayValue": "2nd"
+      },
+      "clock": {
+        "displayValue": "9:30"
+      },
+      "scoringPlay": false,
+      "scoreValue": 0,
+      "modified": "2026-02-16T16:47Z",
+      "team": {
+        "id": "79"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "id": "5263100",
+            "displayName": "Kirsten Simms",
+            "shortName": "K. Simms"
+          },
+          "ytdGoals": 1
+        }
+      ],
+      "wallclock": "2026-02-16T16:59:04Z",
+      "shootingPlay": true
+    },
+    {
+      "id": "40184577905095",
+      "sequenceNumber": "3",
+      "type": {
+        "id": "505",
+        "text": "Goal",
+        "abbreviation": "goal"
+      },
+      "text": "Even Strength Goal Scored by Abbey Murphy assisted by Hannah Bilka and Haley Winn",
+      "awayScore": 0,
+      "homeScore": 3,
+      "period": {
+        "number": 2,
+        "displayValue": "2nd"
+      },
+      "clock": {
+        "displayValue": "15:12"
+      },
+      "scoringPlay": true,
+      "scoreValue": 1,
+      "modified": "2026-02-16T16:59Z",
+      "team": {
+        "id": "79"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "id": "4913613",
+            "displayName": "Abbey Murphy",
+            "shortName": "A. Murphy"
+          },
+          "type": "scorer",
+          "ytdGoals": 2
+        },
+        {
+          "athlete": {
+            "id": "5332768",
+            "displayName": "Hannah Bilka",
+            "shortName": "H. Bilka"
+          },
+          "type": "assister",
+          "ytdAssists": 3
+        },
+        {
+          "athlete": {
+            "id": "5263051",
+            "displayName": "Haley Winn",
+            "shortName": "H. Winn"
+          },
+          "type": "assister",
+          "ytdAssists": 3
+        }
+      ],
+      "wallclock": "2026-02-16T16:59:04Z",
+      "shootingPlay": true,
+      "strength": {
+        "id": "701",
+        "text": "Even Strength",
+        "abbreviation": "even-strength"
+      },
+      "shotInfo": {
+        "id": "901",
+        "text": "None",
+        "abbreviation": "regular"
+      }
+    }
+  ],
+  "videos": [],
+  "news": {
+    "header": "Women's Ice Hockey News",
+    "articles": [
+      {
+        "id": 47932527,
+        "nowId": "1-47932527",
+        "contentKey": "47932527-1-6-1",
+        "dataSourceIdentifier": "0f925e609d457",
+        "type": "Story",
+        "headline": "2026 Winter Olympics: Best moments from Sunday in Milan Cortina",
+        "description": "On Sunday at the Winter Olympics, Mikaela Shiffrin skied, pairs figure skating started and USA men's hockey beat Germany.",
+        "lastModified": "2026-02-15T23:51:53Z",
+        "published": "2026-02-15T23:51:53Z",
+        "images": [
+          {
+            "dataSourceIdentifier": "281faa69f318b",
+            "id": 47940895,
+            "type": "header",
+            "name": "Brock Nelson [608x342]",
+            "alt": "Brock Nelson",
+            "credit": "Bruce Bennett/Getty Images",
+            "height": 342,
+            "width": 608,
+            "url": "https://a.espncdn.com/photo/2026/0215/r1615657_608x342_16-9.jpg"
+          },
+          {
+            "dataSourceIdentifier": "3915d2842b7f6",
+            "id": 47939854,
+            "type": "header",
+            "name": "LEDE: USA Hockey [608x342]",
+            "credit": "Catherine Steenkeste/Getty Images",
+            "height": 342,
+            "width": 608,
+            "url": "https://a.espncdn.com/photo/2026/0215/r1615611_2_608x342_16-9.jpg"
+          },
+          {
+            "dataSourceIdentifier": "e266fa677e02b",
+            "id": 47932652,
+            "type": "header",
+            "name": "Mikaela Shiffrin [1296x729]",
+            "caption": "Mikaela Shiffrin is back in action in the giant slalom.",
+            "credit": "Zhang Chenlin/Xinhua via Getty Images",
+            "height": 729,
+            "width": 1296,
+            "url": "https://a.espncdn.com/photo/2026/0214/r1615313_1296x729_16-9.jpg"
+          },
+          {
+            "type": "Media",
+            "name": "Noah Hanifin: U.S men's hockey is a 'work in progress'",
+            "caption": "Emily Kaplan talks with Noah Hanifin, Matt Boldy and Jake Guentzel following the U.S men's hockey team's 6-3 win over Denmark.",
+            "height": 324,
+            "width": 576,
+            "url": "https://a.espncdn.com/media/motion/2026/0214/dm_260214_SC4U_16x9_Olympics_IA_2-14/dm_260214_SC4U_16x9_Olympics_IA_2-14.jpg"
+          }
+        ],
+        "categories": [
+          {
+            "id": 123672,
+            "type": "league",
+            "uid": "s:3700~l:3759",
+            "guid": "6b3af23d-602a-ac36-be12-05580aff8a2e",
+            "description": "Olympics - Luge",
+            "sportId": 3759,
+            "leagueId": 3759,
+            "league": {
+              "id": 3759,
+              "description": "Olympics - Luge",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123668,
+            "type": "league",
+            "uid": "s:3700~l:3755",
+            "guid": "2e710614-d4ec-2ad7-43be-c90968424bfa",
+            "description": "Olympics - Curling",
+            "sportId": 3755,
+            "leagueId": 3755,
+            "league": {
+              "id": 3755,
+              "description": "Olympics - Curling",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 754526,
+            "type": "league",
+            "uid": "s:70~l:20146",
+            "guid": "c4eea4e5-a9f1-361b-8966-5406a17bf180",
+            "description": "Men's Ice Hockey",
+            "sportId": 20146,
+            "leagueId": 20146,
+            "league": {
+              "id": 20146,
+              "description": "Men's Ice Hockey",
+              "abbreviation": "Men's Ice Hockey",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123666,
+            "type": "league",
+            "uid": "s:3700~l:3753",
+            "guid": "1a5a9896-6a69-3d18-8d34-178a44bf1cec",
+            "description": "Olympics - Bobsled",
+            "sportId": 3753,
+            "leagueId": 3753,
+            "league": {
+              "id": 3753,
+              "description": "Olympics - Bobsled",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123675,
+            "type": "league",
+            "uid": "s:3700~l:3762",
+            "guid": "908bc5d6-6327-b58c-6183-f6976611d1b2",
+            "description": "Olympics - Skeleton",
+            "sportId": 3762,
+            "leagueId": 3762,
+            "league": {
+              "id": 3762,
+              "description": "Olympics - Skeleton",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123667,
+            "type": "league",
+            "uid": "s:3700~l:3754",
+            "guid": "466bd14f-d982-3161-b990-93f58d6b2286",
+            "description": "Olympics - Cross-Country",
+            "sportId": 3754,
+            "leagueId": 3754,
+            "league": {
+              "id": 3754,
+              "description": "Olympics - Cross-Country",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123671,
+            "type": "league",
+            "uid": "s:3700~l:3758",
+            "guid": "79c2a434-4b84-3ea5-93da-2864b0ad812b",
+            "description": "Olympics - Ice Hockey",
+            "sportId": 3758,
+            "leagueId": 3758,
+            "league": {
+              "id": 3758,
+              "description": "Olympics - Ice Hockey",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123677,
+            "type": "league",
+            "uid": "s:3700~l:3764",
+            "guid": "489b4ebe-b59d-ceed-f188-75f997c6db1f",
+            "description": "Olympics - Snowboarding",
+            "sportId": 3764,
+            "leagueId": 3764,
+            "league": {
+              "id": 3764,
+              "description": "Olympics - Snowboarding",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123678,
+            "type": "league",
+            "uid": "s:3700~l:3765",
+            "guid": "865f2ea4-e886-377a-82e3-75d4d5571834",
+            "description": "Olympics - Speedskating",
+            "sportId": 3765,
+            "leagueId": 3765,
+            "league": {
+              "id": 3765,
+              "description": "Olympics - Speedskating",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123676,
+            "type": "league",
+            "uid": "s:3700~l:3763",
+            "guid": "532d5c71-0472-3047-ab2e-90156c997740",
+            "description": "Olympics - Ski Jumping",
+            "sportId": 3763,
+            "leagueId": 3763,
+            "league": {
+              "id": 3763,
+              "description": "Olympics - Ski Jumping",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123664,
+            "type": "league",
+            "uid": "s:3700~l:3751",
+            "guid": "e6136842-f37e-16a6-b91c-6237278bfa08",
+            "description": "Olympics - Alpine Skiing",
+            "sportId": 3751,
+            "leagueId": 3751,
+            "league": {
+              "id": 3751,
+              "description": "Olympics - Alpine Skiing",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 409220,
+            "type": "topic",
+            "guid": "3ec1da6b-e74e-fda5-be3a-18190ec8aa5d",
+            "description": "culture",
+            "sportId": 0,
+            "topicId": 777
+          },
+          {
+            "id": 123669,
+            "type": "league",
+            "uid": "s:3700~l:3756",
+            "guid": "47ebd2ab-4563-b932-3ea5-6da94befc1b3",
+            "description": "Olympics - Figure Skating",
+            "sportId": 3756,
+            "leagueId": 3756,
+            "league": {
+              "id": 3756,
+              "description": "Olympics - Figure Skating",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 754527,
+            "type": "league",
+            "uid": "s:70~l:20147",
+            "guid": "2141c0b4-763a-37a1-baa6-c0592ca78fbd",
+            "description": "Women's Ice Hockey",
+            "sportId": 20147,
+            "leagueId": 20147,
+            "league": {
+              "id": 20147,
+              "description": "Women's Ice Hockey",
+              "abbreviation": "Women's Ice Hockey",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123665,
+            "type": "league",
+            "uid": "s:3700~l:3752",
+            "guid": "f61a83d2-1fdd-ad6f-45b3-a499901779e0",
+            "description": "Olympics - Biathlon",
+            "sportId": 3752,
+            "leagueId": 3752,
+            "league": {
+              "id": 3752,
+              "description": "Olympics - Biathlon",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 754979,
+            "type": "league",
+            "uid": "s:3700~l:3761",
+            "guid": "22e18bd4-d6ee-fa93-b88a-636e47c95887",
+            "description": "Olympics - Short-Track Speedskating",
+            "sportId": 3761,
+            "leagueId": 3761,
+            "league": {
+              "id": 3761,
+              "description": "Olympics - Short-Track Speedskating",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123670,
+            "type": "league",
+            "uid": "s:3700~l:3757",
+            "guid": "40de860f-6cb8-3c0b-99cf-77eba3a7dba6",
+            "description": "Olympics - Freestyle Skiing",
+            "sportId": 3757,
+            "leagueId": 3757,
+            "league": {
+              "id": 3757,
+              "description": "Olympics - Freestyle Skiing",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 741650,
+            "type": "league",
+            "uid": "s:3700~l:3802",
+            "guid": "389d3c3d-1e5a-4e9a-b7eb-814d98057b83",
+            "description": "Olympics - Ski Mountaineering",
+            "sportId": 3802,
+            "leagueId": 3802,
+            "league": {
+              "id": 3802,
+              "description": "Olympics - Ski Mountaineering",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 47714,
+            "type": "league",
+            "guid": "324bfb0e-398c-4946-9a22-7c61691b51f5",
+            "description": "Olympics",
+            "sportId": 3700,
+            "leagueId": 3700,
+            "league": {
+              "id": 3700,
+              "description": "Olympics"
+            }
+          },
+          {
+            "id": 123673,
+            "type": "league",
+            "uid": "s:3700~l:3760",
+            "guid": "fd0d2331-fd18-ca02-2c79-c447104496ff",
+            "description": "Olympics - Nordic Combined",
+            "sportId": 3760,
+            "leagueId": 3760,
+            "league": {
+              "id": 3760,
+              "description": "Olympics - Nordic Combined",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 701887,
+            "type": "contributor",
+            "guid": "3139123a-2bc7-3127-b40d-448cdb859378",
+            "description": "ESPN Staff Profile",
+            "slug": "espn-staff-profile",
+            "contributor": {
+              "id": 2462,
+              "description": "ESPN Staff Profile",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "type": "guid",
+            "guid": "6b3af23d-602a-ac36-be12-05580aff8a2e"
+          },
+          {
+            "type": "guid",
+            "guid": "2e710614-d4ec-2ad7-43be-c90968424bfa"
+          },
+          {
+            "type": "guid",
+            "guid": "c4eea4e5-a9f1-361b-8966-5406a17bf180"
+          },
+          {
+            "type": "guid",
+            "guid": "1a5a9896-6a69-3d18-8d34-178a44bf1cec"
+          },
+          {
+            "type": "guid",
+            "guid": "908bc5d6-6327-b58c-6183-f6976611d1b2"
+          },
+          {
+            "type": "guid",
+            "guid": "466bd14f-d982-3161-b990-93f58d6b2286"
+          },
+          {
+            "type": "guid",
+            "guid": "79c2a434-4b84-3ea5-93da-2864b0ad812b"
+          },
+          {
+            "type": "guid",
+            "guid": "489b4ebe-b59d-ceed-f188-75f997c6db1f"
+          },
+          {
+            "type": "guid",
+            "guid": "865f2ea4-e886-377a-82e3-75d4d5571834"
+          },
+          {
+            "type": "guid",
+            "guid": "532d5c71-0472-3047-ab2e-90156c997740"
+          },
+          {
+            "type": "guid",
+            "guid": "e6136842-f37e-16a6-b91c-6237278bfa08"
+          },
+          {
+            "type": "guid",
+            "guid": "3ec1da6b-e74e-fda5-be3a-18190ec8aa5d"
+          },
+          {
+            "type": "guid",
+            "guid": "47ebd2ab-4563-b932-3ea5-6da94befc1b3"
+          },
+          {
+            "type": "guid",
+            "guid": "2141c0b4-763a-37a1-baa6-c0592ca78fbd"
+          },
+          {
+            "type": "guid",
+            "guid": "f61a83d2-1fdd-ad6f-45b3-a499901779e0"
+          },
+          {
+            "type": "guid",
+            "guid": "22e18bd4-d6ee-fa93-b88a-636e47c95887"
+          },
+          {
+            "type": "guid",
+            "guid": "40de860f-6cb8-3c0b-99cf-77eba3a7dba6"
+          },
+          {
+            "type": "guid",
+            "guid": "389d3c3d-1e5a-4e9a-b7eb-814d98057b83"
+          },
+          {
+            "type": "guid",
+            "guid": "324bfb0e-398c-4946-9a22-7c61691b51f5"
+          },
+          {
+            "type": "guid",
+            "guid": "fd0d2331-fd18-ca02-2c79-c447104496ff"
+          },
+          {
+            "type": "guid",
+            "guid": "3139123a-2bc7-3127-b40d-448cdb859378"
+          }
+        ],
+        "premium": false,
+        "links": {
+          "web": {
+            "href": "https://www.espn.com/olympics/story/_/id/47932527/2026-milan-cortina-italy-winter-olympics-best-moments-sunday"
+          },
+          "mobile": {
+            "href": "http://m.espn.go.com/extra/olympics/story?storyId=47932527"
+          },
+          "api": {
+            "self": {
+              "href": "https://content.core.api.espn.com/v1/sports/news/47932527"
+            }
+          },
+          "app": {
+            "sportscenter": {
+              "href": "sportscenter://x-callback-url/showStory?uid=47932527"
+            }
+          }
+        },
+        "byline": "ESPN Staff"
+      },
+      {
+        "id": 47923038,
+        "nowId": "1-47923038",
+        "contentKey": "47923038-1-6-1",
+        "dataSourceIdentifier": "d9b805e496669",
+        "type": "Story",
+        "headline": "2026 Winter Olympics: Look back at Saturday's action from Milan Cortina",
+        "description": "Saturday at the Winter Olympics includes Team USA men's hockey winning against Denmark and USA curling round-robins.",
+        "lastModified": "2026-02-15T03:02:45Z",
+        "published": "2026-02-15T03:02:45Z",
+        "images": [
+          {
+            "dataSourceIdentifier": "3c5d45c73645e",
+            "id": 47932088,
+            "type": "header",
+            "name": "Team USA hockey [1296x729]",
+            "caption": "Team USA hockey started slow, but roared back to beat Denmark.",
+            "credit": "Jared C. Tilton/Getty Images",
+            "height": 729,
+            "width": 1296,
+            "url": "https://a.espncdn.com/photo/2026/0214/r1615292_1296x729_16-9.jpg"
+          },
+          {
+            "type": "Media",
+            "name": "Brock Nelson talks significance of being a third-generation Olympian",
+            "caption": "Emily Kaplan speaks to Brock Nelson, Tage Thompson and Jack Hughes after defeating Latvia.",
+            "height": 324,
+            "width": 576,
+            "url": "https://a.espncdn.com/media/motion/2026/0212/dm_260212_olympics_mens_hockey/dm_260212_olympics_mens_hockey.jpg"
+          }
+        ],
+        "categories": [
+          {
+            "id": 123672,
+            "type": "league",
+            "uid": "s:3700~l:3759",
+            "guid": "6b3af23d-602a-ac36-be12-05580aff8a2e",
+            "description": "Olympics - Luge",
+            "sportId": 3759,
+            "leagueId": 3759,
+            "league": {
+              "id": 3759,
+              "description": "Olympics - Luge",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 754526,
+            "type": "league",
+            "uid": "s:70~l:20146",
+            "guid": "c4eea4e5-a9f1-361b-8966-5406a17bf180",
+            "description": "Men's Ice Hockey",
+            "sportId": 20146,
+            "leagueId": 20146,
+            "league": {
+              "id": 20146,
+              "description": "Men's Ice Hockey",
+              "abbreviation": "Men's Ice Hockey",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123668,
+            "type": "league",
+            "uid": "s:3700~l:3755",
+            "guid": "2e710614-d4ec-2ad7-43be-c90968424bfa",
+            "description": "Olympics - Curling",
+            "sportId": 3755,
+            "leagueId": 3755,
+            "league": {
+              "id": 3755,
+              "description": "Olympics - Curling",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123666,
+            "type": "league",
+            "uid": "s:3700~l:3753",
+            "guid": "1a5a9896-6a69-3d18-8d34-178a44bf1cec",
+            "description": "Olympics - Bobsled",
+            "sportId": 3753,
+            "leagueId": 3753,
+            "league": {
+              "id": 3753,
+              "description": "Olympics - Bobsled",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123675,
+            "type": "league",
+            "uid": "s:3700~l:3762",
+            "guid": "908bc5d6-6327-b58c-6183-f6976611d1b2",
+            "description": "Olympics - Skeleton",
+            "sportId": 3762,
+            "leagueId": 3762,
+            "league": {
+              "id": 3762,
+              "description": "Olympics - Skeleton",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123667,
+            "type": "league",
+            "uid": "s:3700~l:3754",
+            "guid": "466bd14f-d982-3161-b990-93f58d6b2286",
+            "description": "Olympics - Cross-Country",
+            "sportId": 3754,
+            "leagueId": 3754,
+            "league": {
+              "id": 3754,
+              "description": "Olympics - Cross-Country",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123671,
+            "type": "league",
+            "uid": "s:3700~l:3758",
+            "guid": "79c2a434-4b84-3ea5-93da-2864b0ad812b",
+            "description": "Olympics - Ice Hockey",
+            "sportId": 3758,
+            "leagueId": 3758,
+            "league": {
+              "id": 3758,
+              "description": "Olympics - Ice Hockey",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123677,
+            "type": "league",
+            "uid": "s:3700~l:3764",
+            "guid": "489b4ebe-b59d-ceed-f188-75f997c6db1f",
+            "description": "Olympics - Snowboarding",
+            "sportId": 3764,
+            "leagueId": 3764,
+            "league": {
+              "id": 3764,
+              "description": "Olympics - Snowboarding",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123678,
+            "type": "league",
+            "uid": "s:3700~l:3765",
+            "guid": "865f2ea4-e886-377a-82e3-75d4d5571834",
+            "description": "Olympics - Speedskating",
+            "sportId": 3765,
+            "leagueId": 3765,
+            "league": {
+              "id": 3765,
+              "description": "Olympics - Speedskating",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123676,
+            "type": "league",
+            "uid": "s:3700~l:3763",
+            "guid": "532d5c71-0472-3047-ab2e-90156c997740",
+            "description": "Olympics - Ski Jumping",
+            "sportId": 3763,
+            "leagueId": 3763,
+            "league": {
+              "id": 3763,
+              "description": "Olympics - Ski Jumping",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123664,
+            "type": "league",
+            "uid": "s:3700~l:3751",
+            "guid": "e6136842-f37e-16a6-b91c-6237278bfa08",
+            "description": "Olympics - Alpine Skiing",
+            "sportId": 3751,
+            "leagueId": 3751,
+            "league": {
+              "id": 3751,
+              "description": "Olympics - Alpine Skiing",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 409220,
+            "type": "topic",
+            "guid": "3ec1da6b-e74e-fda5-be3a-18190ec8aa5d",
+            "description": "culture",
+            "sportId": 0,
+            "topicId": 777
+          },
+          {
+            "id": 123669,
+            "type": "league",
+            "uid": "s:3700~l:3756",
+            "guid": "47ebd2ab-4563-b932-3ea5-6da94befc1b3",
+            "description": "Olympics - Figure Skating",
+            "sportId": 3756,
+            "leagueId": 3756,
+            "league": {
+              "id": 3756,
+              "description": "Olympics - Figure Skating",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 754527,
+            "type": "league",
+            "uid": "s:70~l:20147",
+            "guid": "2141c0b4-763a-37a1-baa6-c0592ca78fbd",
+            "description": "Women's Ice Hockey",
+            "sportId": 20147,
+            "leagueId": 20147,
+            "league": {
+              "id": 20147,
+              "description": "Women's Ice Hockey",
+              "abbreviation": "Women's Ice Hockey",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 754979,
+            "type": "league",
+            "uid": "s:3700~l:3761",
+            "guid": "22e18bd4-d6ee-fa93-b88a-636e47c95887",
+            "description": "Olympics - Short-Track Speedskating",
+            "sportId": 3761,
+            "leagueId": 3761,
+            "league": {
+              "id": 3761,
+              "description": "Olympics - Short-Track Speedskating",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123665,
+            "type": "league",
+            "uid": "s:3700~l:3752",
+            "guid": "f61a83d2-1fdd-ad6f-45b3-a499901779e0",
+            "description": "Olympics - Biathlon",
+            "sportId": 3752,
+            "leagueId": 3752,
+            "league": {
+              "id": 3752,
+              "description": "Olympics - Biathlon",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123670,
+            "type": "league",
+            "uid": "s:3700~l:3757",
+            "guid": "40de860f-6cb8-3c0b-99cf-77eba3a7dba6",
+            "description": "Olympics - Freestyle Skiing",
+            "sportId": 3757,
+            "leagueId": 3757,
+            "league": {
+              "id": 3757,
+              "description": "Olympics - Freestyle Skiing",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 741650,
+            "type": "league",
+            "uid": "s:3700~l:3802",
+            "guid": "389d3c3d-1e5a-4e9a-b7eb-814d98057b83",
+            "description": "Olympics - Ski Mountaineering",
+            "sportId": 3802,
+            "leagueId": 3802,
+            "league": {
+              "id": 3802,
+              "description": "Olympics - Ski Mountaineering",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 47714,
+            "type": "league",
+            "guid": "324bfb0e-398c-4946-9a22-7c61691b51f5",
+            "description": "Olympics",
+            "sportId": 3700,
+            "leagueId": 3700,
+            "league": {
+              "id": 3700,
+              "description": "Olympics"
+            }
+          },
+          {
+            "id": 123673,
+            "type": "league",
+            "uid": "s:3700~l:3760",
+            "guid": "fd0d2331-fd18-ca02-2c79-c447104496ff",
+            "description": "Olympics - Nordic Combined",
+            "sportId": 3760,
+            "leagueId": 3760,
+            "league": {
+              "id": 3760,
+              "description": "Olympics - Nordic Combined",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 701887,
+            "type": "contributor",
+            "guid": "3139123a-2bc7-3127-b40d-448cdb859378",
+            "description": "ESPN Staff Profile",
+            "slug": "espn-staff-profile",
+            "contributor": {
+              "id": 2462,
+              "description": "ESPN Staff Profile",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "type": "guid",
+            "guid": "6b3af23d-602a-ac36-be12-05580aff8a2e"
+          },
+          {
+            "type": "guid",
+            "guid": "c4eea4e5-a9f1-361b-8966-5406a17bf180"
+          },
+          {
+            "type": "guid",
+            "guid": "2e710614-d4ec-2ad7-43be-c90968424bfa"
+          },
+          {
+            "type": "guid",
+            "guid": "1a5a9896-6a69-3d18-8d34-178a44bf1cec"
+          },
+          {
+            "type": "guid",
+            "guid": "908bc5d6-6327-b58c-6183-f6976611d1b2"
+          },
+          {
+            "type": "guid",
+            "guid": "466bd14f-d982-3161-b990-93f58d6b2286"
+          },
+          {
+            "type": "guid",
+            "guid": "79c2a434-4b84-3ea5-93da-2864b0ad812b"
+          },
+          {
+            "type": "guid",
+            "guid": "489b4ebe-b59d-ceed-f188-75f997c6db1f"
+          },
+          {
+            "type": "guid",
+            "guid": "865f2ea4-e886-377a-82e3-75d4d5571834"
+          },
+          {
+            "type": "guid",
+            "guid": "532d5c71-0472-3047-ab2e-90156c997740"
+          },
+          {
+            "type": "guid",
+            "guid": "e6136842-f37e-16a6-b91c-6237278bfa08"
+          },
+          {
+            "type": "guid",
+            "guid": "3ec1da6b-e74e-fda5-be3a-18190ec8aa5d"
+          },
+          {
+            "type": "guid",
+            "guid": "47ebd2ab-4563-b932-3ea5-6da94befc1b3"
+          },
+          {
+            "type": "guid",
+            "guid": "2141c0b4-763a-37a1-baa6-c0592ca78fbd"
+          },
+          {
+            "type": "guid",
+            "guid": "22e18bd4-d6ee-fa93-b88a-636e47c95887"
+          },
+          {
+            "type": "guid",
+            "guid": "f61a83d2-1fdd-ad6f-45b3-a499901779e0"
+          },
+          {
+            "type": "guid",
+            "guid": "40de860f-6cb8-3c0b-99cf-77eba3a7dba6"
+          },
+          {
+            "type": "guid",
+            "guid": "389d3c3d-1e5a-4e9a-b7eb-814d98057b83"
+          },
+          {
+            "type": "guid",
+            "guid": "324bfb0e-398c-4946-9a22-7c61691b51f5"
+          },
+          {
+            "type": "guid",
+            "guid": "fd0d2331-fd18-ca02-2c79-c447104496ff"
+          },
+          {
+            "type": "guid",
+            "guid": "3139123a-2bc7-3127-b40d-448cdb859378"
+          }
+        ],
+        "premium": false,
+        "links": {
+          "web": {
+            "href": "https://www.espn.com/olympics/story/_/id/47923038/2026-milan-cortina-italy-winter-olympics-best-moments-saturday"
+          },
+          "mobile": {
+            "href": "http://m.espn.go.com/extra/olympics/story?storyId=47923038"
+          },
+          "api": {
+            "self": {
+              "href": "https://content.core.api.espn.com/v1/sports/news/47923038"
+            }
+          },
+          "app": {
+            "sportscenter": {
+              "href": "sportscenter://x-callback-url/showStory?uid=47923038"
+            }
+          }
+        },
+        "byline": "ESPN Staff"
+      },
+      {
+        "id": 47929289,
+        "nowId": "1-47929289",
+        "contentKey": "47929289-1-5-1",
+        "dataSourceIdentifier": "e9a06f31c274d",
+        "type": "HeadlineNews",
+        "headline": "Marie-Philip Poulin returns; Canada into Olympic semifinals",
+        "description": "Captain Marie-Philip Poulin returned from injury to score a goal in Canada's 5-1 quarterfinal win over Germany. ",
+        "lastModified": "2026-02-14T21:34:09Z",
+        "published": "2026-02-14T21:34:09Z",
+        "images": [
+          {
+            "dataSourceIdentifier": "0ff38e2363e6c",
+            "id": 47929425,
+            "type": "header",
+            "name": "Marie-Philip Poulin [1296x729]",
+            "alt": "Marie-Philip Poulin",
+            "credit": "Gregory Shamus/Getty Images",
+            "height": 729,
+            "width": 1296,
+            "url": "https://a.espncdn.com/photo/2026/0214/r1615184_1296x729_16-9.jpg"
+          }
+        ],
+        "categories": [
+          {
+            "id": 47714,
+            "type": "league",
+            "guid": "324bfb0e-398c-4946-9a22-7c61691b51f5",
+            "description": "Olympics",
+            "sportId": 3700,
+            "leagueId": 3700,
+            "league": {
+              "id": 3700,
+              "description": "Olympics"
+            }
+          },
+          {
+            "id": 123671,
+            "type": "league",
+            "uid": "s:3700~l:3758",
+            "guid": "79c2a434-4b84-3ea5-93da-2864b0ad812b",
+            "description": "Olympics - Ice Hockey",
+            "sportId": 3758,
+            "leagueId": 3758,
+            "league": {
+              "id": 3758,
+              "description": "Olympics - Ice Hockey",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 754527,
+            "type": "league",
+            "uid": "s:70~l:20147",
+            "guid": "2141c0b4-763a-37a1-baa6-c0592ca78fbd",
+            "description": "Women's Ice Hockey",
+            "sportId": 20147,
+            "leagueId": 20147,
+            "league": {
+              "id": 20147,
+              "description": "Women's Ice Hockey",
+              "abbreviation": "Women's Ice Hockey",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 116550,
+            "type": "topic",
+            "guid": "fe879255-6324-4784-385f-a1a18c22b5cc",
+            "description": "espnw",
+            "sportId": 0,
+            "topicId": 5
+          },
+          {
+            "id": 409224,
+            "type": "topic",
+            "guid": "52313677-19f8-b106-ec91-d8d17e6087fe",
+            "description": "news",
+            "sportId": 0,
+            "topicId": 781
+          },
+          {
+            "type": "guid",
+            "guid": "324bfb0e-398c-4946-9a22-7c61691b51f5"
+          },
+          {
+            "type": "guid",
+            "guid": "79c2a434-4b84-3ea5-93da-2864b0ad812b"
+          },
+          {
+            "type": "guid",
+            "guid": "2141c0b4-763a-37a1-baa6-c0592ca78fbd"
+          },
+          {
+            "type": "guid",
+            "guid": "fe879255-6324-4784-385f-a1a18c22b5cc"
+          },
+          {
+            "type": "guid",
+            "guid": "52313677-19f8-b106-ec91-d8d17e6087fe"
+          }
+        ],
+        "premium": false,
+        "links": {
+          "web": {
+            "href": "https://www.espn.com/olympics/hockey/story/_/id/47929289/marie-philip-poulin-returns-canada-olympic-semifinals"
+          },
+          "mobile": {
+            "href": "http://m.espn.go.com/wireless/story?storyId=47929289"
+          },
+          "api": {
+            "self": {
+              "href": "https://content.core.api.espn.com/v1/sports/news/47929289"
+            }
+          },
+          "app": {
+            "sportscenter": {
+              "href": "sportscenter://x-callback-url/showStory?uid=47929289"
+            }
+          }
+        }
+      },
+      {
+        "id": 47927252,
+        "nowId": "1-47927252",
+        "contentKey": "47927252-1-5-1",
+        "dataSourceIdentifier": "8b1244d73ea19",
+        "type": "HeadlineNews",
+        "headline": "Finland's Hiirokoski needs surgery, out of Olympic women's hockey",
+        "description": "Defender Jenni Hiirikoski's fifth and potentially final Olympic Games are over due to an upper body injury that will require surgery, the Finnish Ice Hockey Association announced.",
+        "lastModified": "2026-02-14T15:21:14Z",
+        "published": "2026-02-14T15:21:14Z",
+        "images": [
+          {
+            "dataSourceIdentifier": "58cf0de043460",
+            "id": 47927271,
+            "type": "header",
+            "name": "Jenni Hiirikoski [600x400]",
+            "credit": "AP Photo/Carolyn Kaster",
+            "height": 400,
+            "width": 600,
+            "url": "https://a.espncdn.com/photo/2026/0214/r1615070_600x400_3-2.jpg"
+          }
+        ],
+        "categories": [
+          {
+            "id": 47714,
+            "type": "league",
+            "guid": "324bfb0e-398c-4946-9a22-7c61691b51f5",
+            "description": "Olympics",
+            "sportId": 3700,
+            "leagueId": 3700,
+            "league": {
+              "id": 3700,
+              "description": "Olympics"
+            }
+          },
+          {
+            "id": 754527,
+            "type": "league",
+            "uid": "s:70~l:20147",
+            "guid": "2141c0b4-763a-37a1-baa6-c0592ca78fbd",
+            "description": "Women's Ice Hockey",
+            "sportId": 20147,
+            "leagueId": 20147,
+            "league": {
+              "id": 20147,
+              "description": "Women's Ice Hockey",
+              "abbreviation": "Women's Ice Hockey",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 123671,
+            "type": "league",
+            "uid": "s:3700~l:3758",
+            "guid": "79c2a434-4b84-3ea5-93da-2864b0ad812b",
+            "description": "Olympics - Ice Hockey",
+            "sportId": 3758,
+            "leagueId": 3758,
+            "league": {
+              "id": 3758,
+              "description": "Olympics - Ice Hockey",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 116550,
+            "type": "topic",
+            "guid": "fe879255-6324-4784-385f-a1a18c22b5cc",
+            "description": "espnw",
+            "sportId": 0,
+            "topicId": 5
+          },
+          {
+            "id": 409224,
+            "type": "topic",
+            "guid": "52313677-19f8-b106-ec91-d8d17e6087fe",
+            "description": "news",
+            "sportId": 0,
+            "topicId": 781
+          },
+          {
+            "type": "guid",
+            "guid": "324bfb0e-398c-4946-9a22-7c61691b51f5"
+          },
+          {
+            "type": "guid",
+            "guid": "2141c0b4-763a-37a1-baa6-c0592ca78fbd"
+          },
+          {
+            "type": "guid",
+            "guid": "79c2a434-4b84-3ea5-93da-2864b0ad812b"
+          },
+          {
+            "type": "guid",
+            "guid": "fe879255-6324-4784-385f-a1a18c22b5cc"
+          },
+          {
+            "type": "guid",
+            "guid": "52313677-19f8-b106-ec91-d8d17e6087fe"
+          }
+        ],
+        "premium": false,
+        "links": {
+          "web": {
+            "href": "https://www.espn.com/olympics/story/_/id/47927252/finland-hiirokoski-need-surgery-olympic-women-hockey"
+          },
+          "mobile": {
+            "href": "http://m.espn.go.com/extra/olympics/story?storyId=47927252"
+          },
+          "api": {
+            "self": {
+              "href": "https://content.core.api.espn.com/v1/sports/news/47927252"
+            }
+          },
+          "app": {
+            "sportscenter": {
+              "href": "sportscenter://x-callback-url/showStory?uid=47927252"
+            }
+          }
+        }
+      },
+      {
+        "id": 47924827,
+        "nowId": "1-47924827",
+        "contentKey": "47924827-1-293-1",
+        "dataSourceIdentifier": "21551084524de",
+        "type": "Media",
+        "headline": "Stecklein, Heise talk USA hockey's success in 2026 Olympic Winter Games",
+        "description": "Emily Kaplan interviews Lee Stecklein and Taylor Heise after Team USA advances to the semifinals.",
+        "lastModified": "2026-02-14T18:15:27Z",
+        "published": "2026-02-14T18:15:27Z",
+        "images": [
+          {
+            "name": "Stecklein, Heise talk USA hockey's success in 2026 Olympic Winter Games",
+            "caption": "Emily Kaplan interviews Lee Stecklein and Taylor Heise after Team USA advances to the semifinals.",
+            "alt": "",
+            "height": 324,
+            "width": 576,
+            "url": "https://a.espncdn.com/media/motion/2026/0213/dm_260213_Stecklein_Heise_talk_USA_hockeys_success_in_2026_Olympic_Winter_Games/dm_260213_Stecklein_Heise_talk_USA_hockeys_success_in_2026_Olympic_Winter_Games.jpg"
+          }
+        ],
+        "categories": [
+          {
+            "id": 754527,
+            "type": "league",
+            "uid": "s:70~l:20147",
+            "guid": "2141c0b4-763a-37a1-baa6-c0592ca78fbd",
+            "description": "Women's Ice Hockey",
+            "sportId": 20147,
+            "leagueId": 20147,
+            "league": {
+              "id": 20147,
+              "description": "Women's Ice Hockey",
+              "abbreviation": "Women's Ice Hockey",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 711824,
+            "type": "editorialindicator",
+            "guid": "d348c764-47d9-3e31-bd75-d39dfde52c26",
+            "description": "SC4U  - Eligible"
+          },
+          {
+            "id": 718171,
+            "type": "editorialindicator",
+            "guid": "2a4cc294-9e85-38be-b7ed-12d8b3f3c646",
+            "description": "SC4U - InstantAnalysis"
+          },
+          {
+            "id": 47714,
+            "type": "league",
+            "guid": "324bfb0e-398c-4946-9a22-7c61691b51f5",
+            "description": "Olympics",
+            "sportId": 3700,
+            "leagueId": 3700,
+            "league": {
+              "id": 3700,
+              "description": "Olympics"
+            }
+          },
+          {
+            "type": "event",
+            "uid": "s:70~l:20147~e:401845776",
+            "guid": "d16c6c19-78ea-34ad-8eee-f681693d8459",
+            "description": "Italy Italy @ United States United States",
+            "eventId": 401845776,
+            "event": {
+              "id": 401845776,
+              "sport": "hockey",
+              "league": "olympics-womens-ice-hockey",
+              "description": "Italy Italy @ United States United States"
+            }
+          },
+          {
+            "type": "guid",
+            "guid": "2141c0b4-763a-37a1-baa6-c0592ca78fbd"
+          },
+          {
+            "type": "guid",
+            "guid": "d348c764-47d9-3e31-bd75-d39dfde52c26"
+          },
+          {
+            "type": "guid",
+            "guid": "2a4cc294-9e85-38be-b7ed-12d8b3f3c646"
+          },
+          {
+            "type": "guid",
+            "guid": "324bfb0e-398c-4946-9a22-7c61691b51f5"
+          },
+          {
+            "type": "guid",
+            "guid": "d16c6c19-78ea-34ad-8eee-f681693d8459"
+          }
+        ],
+        "premium": false,
+        "links": {
+          "web": {
+            "href": "https://www.espn.com/video/clip?id=47924827",
+            "self": {
+              "href": "https://www.espn.com/video/clip?id=47924827",
+              "dsi": {
+                "href": "https://www.espn.com/video/clip?id=21551084524de"
+              }
+            }
+          },
+          "api": {
+            "self": {
+              "href": "https://content.core.api.espn.com/v1/video/clips/47924827"
+            },
+            "artwork": {
+              "href": "https://artwork.api.espn.com/artwork/collections/media/d56ec17b-1932-420d-9b36-1c51f96f9de5"
+            }
+          },
+          "sportscenter": {
+            "href": "sportscenter://x-callback-url/showVideo?videoID=47924827&videoDSI=21551084524de"
+          }
+        }
+      },
+      {
+        "id": 47924030,
+        "nowId": "1-47924030",
+        "contentKey": "47924030-1-293-1",
+        "dataSourceIdentifier": "61ea25855f314",
+        "type": "Media",
+        "headline": "Why Team USA women's hockey biggest threat might be itself?",
+        "description": "Emily Kaplan breaks down just how talented Team USA women's hockey is in the 2026 Winter Olympics.",
+        "lastModified": "2026-02-14T02:00:00Z",
+        "published": "2026-02-14T02:00:00Z",
+        "images": [
+          {
+            "name": "Why Team USA women's hockey biggest threat might be itself?",
+            "caption": "Emily Kaplan breaks down just how talented Team USA women's hockey is in the 2026 Winter Olympics.",
+            "alt": "",
+            "height": 324,
+            "width": 576,
+            "url": "https://a.espncdn.com/media/motion/2026/0213/dm_260213_Kaplan_on_team_usa/dm_260213_Kaplan_on_team_usa.jpg"
+          }
+        ],
+        "categories": [
+          {
+            "id": 754527,
+            "type": "league",
+            "uid": "s:70~l:20147",
+            "guid": "2141c0b4-763a-37a1-baa6-c0592ca78fbd",
+            "description": "Women's Ice Hockey",
+            "sportId": 20147,
+            "leagueId": 20147,
+            "league": {
+              "id": 20147,
+              "description": "Women's Ice Hockey",
+              "abbreviation": "Women's Ice Hockey",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 664676,
+            "type": "editorialindicator",
+            "guid": "4d71b783-6916-3446-9c19-fab94dc60c1e",
+            "description": "Big Boost"
+          },
+          {
+            "id": 123671,
+            "type": "league",
+            "uid": "s:3700~l:3758",
+            "guid": "79c2a434-4b84-3ea5-93da-2864b0ad812b",
+            "description": "Olympics - Ice Hockey",
+            "sportId": 3758,
+            "leagueId": 3758,
+            "league": {
+              "id": 3758,
+              "description": "Olympics - Ice Hockey",
+              "links": {
+                "web": {
+
+                },
+                "mobile": {
+
+                }
+              }
+            }
+          },
+          {
+            "id": 145735,
+            "type": "topic",
+            "guid": "4ef13d07-6321-66b2-1545-7accd81e7618",
+            "description": "espnw - sports",
+            "sportId": 0,
+            "topicId": 385
+          },
+          {
+            "type": "event",
+            "uid": "s:70~l:20147~e:401845776",
+            "guid": "d16c6c19-78ea-34ad-8eee-f681693d8459",
+            "description": "Italy Italy @ United States United States",
+            "eventId": 401845776,
+            "event": {
+              "id": 401845776,
+              "sport": "hockey",
+              "league": "olympics-womens-ice-hockey",
+              "description": "Italy Italy @ United States United States"
+            }
+          },
+          {
+            "type": "guid",
+            "guid": "2141c0b4-763a-37a1-baa6-c0592ca78fbd"
+          },
+          {
+            "type": "guid",
+            "guid": "4d71b783-6916-3446-9c19-fab94dc60c1e"
+          },
+          {
+            "type": "guid",
+            "guid": "79c2a434-4b84-3ea5-93da-2864b0ad812b"
+          },
+          {
+            "type": "guid",
+            "guid": "4ef13d07-6321-66b2-1545-7accd81e7618"
+          },
+          {
+            "type": "guid",
+            "guid": "d16c6c19-78ea-34ad-8eee-f681693d8459"
+          }
+        ],
+        "premium": false,
+        "links": {
+          "web": {
+            "href": "https://www.espn.com/video/clip?id=47924030",
+            "self": {
+              "href": "https://www.espn.com/video/clip?id=47924030",
+              "dsi": {
+                "href": "https://www.espn.com/video/clip?id=61ea25855f314"
+              }
+            }
+          },
+          "api": {
+            "self": {
+              "href": "https://content.core.api.espn.com/v1/video/clips/47924030"
+            },
+            "artwork": {
+              "href": "https://artwork.api.espn.com/artwork/collections/media/887d9bf8-876d-445b-b778-0815b74611ac"
+            }
+          },
+          "sportscenter": {
+            "href": "sportscenter://x-callback-url/showVideo?videoID=47924030&videoDSI=61ea25855f314"
+          }
+        }
+      }
+    ]
+  },
+  "header": {
+    "id": "401845779",
+    "uid": "s:70~l:20147~e:401845779",
+    "season": {
+      "year": 2026,
+      "current": true,
+      "type": 2
+    },
+    "timeValid": true,
+    "competitions": [
+      {
+        "id": "401845779",
+        "uid": "s:70~l:20147~e:401845779~c:401845779",
+        "description": "Milano Cortina 2026 Women's Hockey - Semifinal",
+        "date": "2026-02-16T15:40Z",
+        "neutralSite": true,
+        "boxscoreAvailable": true,
+        "commentaryAvailable": false,
+        "liveAvailable": true,
+        "onWatchESPN": false,
+        "recent": true,
+        "wallclockAvailable": false,
+        "boxscoreSource": "basic",
+        "playByPlaySource": "none",
+        "competitors": [
+          {
+            "id": "79",
+            "uid": "s:70~l:20147~t:79",
+            "order": 0,
+            "homeAway": "home",
+            "team": {
+              "id": "79",
+              "guid": "8ba41fb1-e23d-38a5-b7d0-168f687543f1",
+              "uid": "s:70~l:20147~t:79",
+              "location": "United States",
+              "name": "United States",
+              "nickname": "United States",
+              "abbreviation": "USA",
+              "displayName": "United States",
+              "logos": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+                  "alt": "United States",
+                  "rel": [
+                    "country-flag",
+                    "full",
+                    "default"
+                  ]
+                }
+              ],
+              "links": []
+            },
+            "score": "4",
+            "linescores": [
+              {
+                "displayValue": "1"
+              },
+              {
+                "displayValue": "2"
+              }
+            ],
+            "record": [
+              {
+                "type": "total",
+                "summary": "4-0-0",
+                "displayValue": "4-0-0, 12 PTS"
+              }
+            ],
+            "possession": false
+          },
+          {
+            "id": "71",
+            "uid": "s:70~l:20147~t:71",
+            "order": 1,
+            "homeAway": "away",
+            "team": {
+              "id": "71",
+              "guid": "45c8ddf9-c069-3205-b491-cd8057464467",
+              "uid": "s:70~l:20147~t:71",
+              "location": "Sweden",
+              "name": "Sweden",
+              "nickname": "Sweden",
+              "abbreviation": "SWE",
+              "displayName": "Sweden",
+              "logos": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/countries/500/swe.png",
+                  "alt": "Sweden",
+                  "rel": [
+                    "country-flag",
+                    "full",
+                    "default"
+                  ]
+                }
+              ],
+              "links": []
+            },
+            "score": "0",
+            "linescores": [
+              {
+                "displayValue": "0"
+              },
+              {
+                "displayValue": "0"
+              }
+            ],
+            "record": [
+              {
+                "type": "total",
+                "summary": "4-0-0",
+                "displayValue": "4-0-0, 12 PTS"
+              }
+            ],
+            "possession": false
+          }
+        ],
+        "status": {
+          "displayClock": "3:50",
+          "period": 2,
+          "type": {
+            "id": "2",
+            "name": "STATUS_IN_PROGRESS",
+            "state": "in",
+            "completed": false,
+            "description": "In Progress",
+            "detail": "3:50 - 2nd Period",
+            "shortDetail": "3:50 - 2nd",
+            "statusPrimary": "3:50",
+            "statusSecondary": "2nd"
+          },
+          "displayPeriod": "2nd"
+        },
+        "broadcasts": [
+          {
+            "type": {
+              "id": "1",
+              "shortName": "TV"
+            },
+            "market": {
+              "id": "1",
+              "type": "National"
+            },
+            "media": {
+              "shortName": "USA Net"
+            },
+            "lang": "en",
+            "region": "us",
+            "isNational": true
+          }
+        ],
+        "boxscoreMinutes": false
+      }
+    ],
+    "links": [
+      {
+        "rel": [
+          "live",
+          "desktop",
+          "event"
+        ],
+        "href": "https://www.espn.com/olympics-womens-ice-hockey/game/_/gameId/401845779",
+        "text": "Gamecast",
+        "shortText": "Gamecast",
+        "isExternal": false,
+        "isPremium": false
+      },
+      {
+        "rel": [
+          "boxscore",
+          "desktop",
+          "event"
+        ],
+        "href": "https://www.espn.com/olympics-womens-ice-hockey/boxscore/_/gameId/401845779",
+        "text": "Box Score",
+        "shortText": "Box Score",
+        "isExternal": false,
+        "isPremium": false
+      }
+    ],
+    "league": {
+      "id": "20147",
+      "uid": "s:70~l:20147",
+      "name": "Women's Ice Hockey",
+      "abbreviation": "Women's Ice Hockey",
+      "slug": "olympics-womens-ice-hockey",
+      "isTournament": false
+    },
+    "gameNote": "Milano Cortina 2026 Women's Hockey - Semifinal"
+  },
+  "wallclockAvailable": false,
+  "meta": {
+    "gp_topic": "gp-hockey-olympics-womens-ice-hockey-401845779",
+    "gameSwitcherEnabled": true,
+    "picker_topic": "picker-hockey-olympics-womens-ice-hockey",
+    "gameState": "in"
+  },
+  "standings": {
+    "fullViewLink": {
+      "text": "Full Standings"
+    },
+    "groups": [
+      {
+        "standings": {
+          "entries": [
+            {
+              "team": "Sweden",
+              "id": "71",
+              "uid": "s:70~l:20147~t:71",
+              "stats": [],
+              "logo": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/countries/500/swe.png",
+                  "alt": "Sweden",
+                  "rel": [
+                    "country-flag",
+                    "full",
+                    "default"
+                  ]
+                }
+              ]
+            },
+            {
+              "team": "Germany",
+              "id": "48099",
+              "uid": "s:70~l:20147~t:48099",
+              "stats": [],
+              "logo": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/countries/500/ger.png",
+                  "alt": "Germany",
+                  "rel": [
+                    "country-flag",
+                    "full",
+                    "default"
+                  ]
+                }
+              ]
+            },
+            {
+              "team": "Italy",
+              "id": "48105",
+              "uid": "s:70~l:20147~t:48105",
+              "stats": [],
+              "logo": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/countries/500/ita.png",
+                  "alt": "Italy",
+                  "rel": [
+                    "country-flag",
+                    "full",
+                    "default"
+                  ]
+                }
+              ]
+            },
+            {
+              "team": "Japan",
+              "id": "40",
+              "uid": "s:70~l:20147~t:40",
+              "stats": [],
+              "logo": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/countries/500/jpn.png",
+                  "alt": "Japan",
+                  "rel": [
+                    "country-flag",
+                    "full",
+                    "default"
+                  ]
+                }
+              ]
+            },
+            {
+              "team": "France",
+              "id": "132244",
+              "uid": "s:70~l:20147~t:132244",
+              "stats": [],
+              "logo": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/countries/500/fra.png",
+                  "alt": "France",
+                  "rel": [
+                    "country-flag",
+                    "full",
+                    "default"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "header": "2025-26 Group B Standings"
+      },
+      {
+        "standings": {
+          "entries": [
+            {
+              "team": "United States",
+              "id": "79",
+              "uid": "s:70~l:20147~t:79",
+              "stats": [],
+              "logo": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+                  "alt": "United States",
+                  "rel": [
+                    "country-flag",
+                    "full",
+                    "default"
+                  ]
+                }
+              ]
+            },
+            {
+              "team": "Canada",
+              "id": "16",
+              "uid": "s:70~l:20147~t:16",
+              "stats": [],
+              "logo": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/countries/500/can.png",
+                  "alt": "Canada",
+                  "rel": [
+                    "country-flag",
+                    "full",
+                    "default"
+                  ]
+                }
+              ]
+            },
+            {
+              "team": "Czechia",
+              "id": "21",
+              "uid": "s:70~l:20147~t:21",
+              "stats": [],
+              "logo": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/countries/500/cze.png",
+                  "alt": "Czech Republic",
+                  "rel": [
+                    "country-flag",
+                    "full",
+                    "default"
+                  ]
+                }
+              ]
+            },
+            {
+              "team": "Finland",
+              "id": "25",
+              "uid": "s:70~l:20147~t:25",
+              "stats": [],
+              "logo": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/countries/500/fin.png",
+                  "alt": "Finland",
+                  "rel": [
+                    "country-flag",
+                    "full",
+                    "default"
+                  ]
+                }
+              ]
+            },
+            {
+              "team": "Switzerland",
+              "id": "72",
+              "uid": "s:70~l:20147~t:72",
+              "stats": [],
+              "logo": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/countries/500/sui.png",
+                  "alt": "Switzerland",
+                  "rel": [
+                    "country-flag",
+                    "full",
+                    "default"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "header": "2025-26 Group A Standings"
+      }
+    ]
+  }
+}
