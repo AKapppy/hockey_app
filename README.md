@@ -1,5 +1,7 @@
 # Hockey App
 
+[Launch the web app](https://akapppy.github.io/hockey_app/)
+
 Desktop hockey dashboard app (Tkinter) with:
 - Predictions (MoneyPuck simulation tables + charts)
 - Stats: Games + Points (with cache-first NHL data loading)
@@ -24,6 +26,12 @@ python3 -m hockey_app
 ## Web Version
 
 The web app is static and lives in `docs/`, so it can run on GitHub Pages without a Python server.
+
+Open the hosted version:
+
+```text
+https://akapppy.github.io/hockey_app/
+```
 
 Build or refresh the static data from local cached MoneyPuck CSVs:
 
