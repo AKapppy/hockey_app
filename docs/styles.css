@@ -193,6 +193,150 @@ select {
   color: #d0d0d0;
 }
 
+.scoreboard-page,
+.stats-table,
+.model-page {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  background: var(--canvas-bg);
+  padding: 8px;
+}
+
+.scoreboard-date,
+.model-date {
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  padding: 4px 0 10px;
+}
+
+.scoreboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.game-card {
+  border: 1px solid var(--grid-strong);
+  background: #2a2a2a;
+  padding: 8px;
+}
+
+.game-meta,
+.game-team {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.game-meta {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.game-team {
+  grid-template-columns: 30px 1fr auto;
+  min-height: 34px;
+  border-top: 1px solid var(--grid);
+}
+
+.game-team img {
+  max-width: 26px;
+  max-height: 26px;
+  object-fit: contain;
+}
+
+.phase-row {
+  display: flex;
+  gap: 8px;
+  padding: 0 0 8px;
+}
+
+.table-scroll {
+  min-width: 0;
+  max-width: 100%;
+  overflow: auto;
+}
+
+.wide-table {
+  min-width: 760px;
+  width: max-content;
+}
+
+.players-grid {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  overflow: auto;
+  background: var(--canvas-bg);
+  padding: 8px;
+}
+
+.player-panel {
+  min-width: 0;
+}
+
+.player-panel h2,
+.standings-col h3 {
+  margin: 0;
+  padding: 6px 8px;
+  background: var(--header-bg);
+  font-size: 15px;
+}
+
+.playoff-layout {
+  display: grid;
+  grid-template-columns: minmax(520px, 1fr) minmax(420px, 0.8fr);
+  gap: 12px;
+}
+
+.standings-block {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.standings-col,
+.series-card {
+  border: 1px solid var(--grid-strong);
+  background: #2a2a2a;
+}
+
+.standing-row,
+.bracket-team {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 3px 6px;
+  border-top: 1px solid var(--grid);
+}
+
+.standing-row img,
+.bracket-team img {
+  max-width: 24px;
+  max-height: 24px;
+  object-fit: contain;
+}
+
+.bracket-block {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  align-content: start;
+  gap: 8px;
+}
+
+.series-card {
+  padding: 0;
+}
+
 .pie-view {
   min-width: 0;
   min-height: 0;
@@ -565,5 +709,12 @@ select {
 
   .team-menu-grid {
     grid-template-columns: repeat(2, max-content);
+  }
+
+  .players-grid,
+  .playoff-layout,
+  .standings-block,
+  .bracket-block {
+    grid-template-columns: 1fr;
   }
 }

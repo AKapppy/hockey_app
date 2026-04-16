@@ -10,6 +10,13 @@ from typing import Any
 import pandas as pd
 
 from hockey_app.data.paths import sims_dir
+from hockey_app.data.xml_cache import (
+    read_game_stats_xml,
+    read_games_day_xml,
+    read_player_stats_xml,
+    read_table_xml,
+    read_team_stats_xml,
+)
 from hockey_app.domain.colors import build_team_color_map, theme_adjusted_line_color
 from hockey_app.domain.teams import TEAM_NAMES, TEAM_TO_CONF, TEAM_TO_DIV, canon_team_code
 from hockey_app.services.simulations import (
@@ -95,12 +102,154 @@ def _frame_to_rows(df: pd.DataFrame) -> dict[str, list[float | None]]:
     return rows
 
 
+def _df_payload(df: pd.DataFrame | None) -> dict[str, Any] | None:
+    if not isinstance(df, pd.DataFrame) or df.empty:
+        return None
+    return {
+        "columns": [str(col) for col in df.columns],
+        "rows": _frame_to_rows(df),
+    }
+
+
+def _jsonable(value: Any) -> Any:
+    if isinstance(value, (dt.date, dt.datetime)):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {str(_jsonable(k)): _jsonable(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_jsonable(v) for v in value]
+    if isinstance(value, tuple):
+        return [_jsonable(v) for v in value]
+    if isinstance(value, float):
+        if pd.isna(value):
+            return None
+        return round(float(value), 6)
+    return value
+
+
 def _latest_value(table: dict[str, list[float | None]], team_code: str) -> float:
     values = table.get(team_code, [])
     for value in reversed(values):
         if value is not None:
             return float(value)
     return 0.0
+
+
+def _date_range(start: dt.date, end: dt.date) -> list[dt.date]:
+    if end < start:
+        return []
+    return [start + dt.timedelta(days=i) for i in range((end - start).days + 1)]
+
+
+def _export_games(season: str, start: dt.date, end: dt.date) -> dict[str, Any]:
+    days: dict[str, list[dict[str, Any]]] = {}
+    latest_day = ""
+    for day in _date_range(start, end):
+        rows = read_games_day_xml(season=season, day=day)
+        if not rows:
+            continue
+        slim_rows: list[dict[str, Any]] = []
+        for game in rows:
+            away = game.get("awayTeam") if isinstance(game.get("awayTeam"), dict) else {}
+            home = game.get("homeTeam") if isinstance(game.get("homeTeam"), dict) else {}
+            slim_rows.append(
+                {
+                    "id": game.get("id"),
+                    "league": game.get("league") or "NHL",
+                    "state": str(game.get("gameState") or "").upper(),
+                    "status": game.get("statusText") or "",
+                    "stage": game.get("displayStage") or "",
+                    "startUtc": game.get("startTimeUTC") or "",
+                    "away": {
+                        "code": str(away.get("abbrev") or "").upper(),
+                        "name": ((away.get("name") or {}).get("default") if isinstance(away.get("name"), dict) else away.get("name")) or "",
+                        "score": away.get("score"),
+                        "shots": away.get("shotsOnGoal"),
+                    },
+                    "home": {
+                        "code": str(home.get("abbrev") or "").upper(),
+                        "name": ((home.get("name") or {}).get("default") if isinstance(home.get("name"), dict) else home.get("name")) or "",
+                        "score": home.get("score"),
+                        "shots": home.get("shotsOnGoal"),
+                    },
+                }
+            )
+        iso = day.isoformat()
+        days[iso] = slim_rows
+        latest_day = iso
+    return {"days": days, "latestDay": latest_day}
+
+
+def _export_team_stats(season: str, league: str) -> dict[str, Any] | None:
+    payload = read_team_stats_xml(season=season, league=league)
+    if not isinstance(payload, dict):
+        return None
+    out: dict[str, Any] = {}
+    for phase, blob in payload.items():
+        if not isinstance(blob, dict):
+            continue
+        dates = [d for d in blob.get("dates", []) if isinstance(d, dt.date)]
+        rows_by_date = blob.get("rows_by_date", {})
+        phase_rows: dict[str, Any] = {}
+        for day in sorted(dates):
+            rows = rows_by_date.get(day, []) if isinstance(rows_by_date, dict) else []
+            phase_rows[day.isoformat()] = _jsonable(rows)
+        out[str(phase)] = {
+            "dates": [d.isoformat() for d in sorted(dates)],
+            "rowsByDate": phase_rows,
+        }
+    return out or None
+
+
+def _export_desktop_data(season: str, start: dt.date, end: dt.date) -> dict[str, Any]:
+    league = "NHL"
+    points = _df_payload(read_table_xml(season=season, lump="points_history", league=league))
+    goal_diff = _df_payload(read_table_xml(season=season, lump="goal_differential", league=league))
+    return {
+        "league": league,
+        "scoreboard": _export_games(season, start, end),
+        "stats": {
+            "teamStats": _export_team_stats(season, league),
+            "gameStats": _jsonable(read_game_stats_xml(season=season, league=league)),
+            "playerStats": _jsonable(read_player_stats_xml(season=season, league=league)),
+            "points": points,
+            "goalDifferential": goal_diff,
+        },
+        "models": {
+            "points": points,
+            "teamStats": _export_team_stats(season, league),
+            "gameStats": _jsonable(read_game_stats_xml(season=season, league=league)),
+        },
+    }
+
+
+def _has_desktop_data(payload: dict[str, Any]) -> bool:
+    desktop = payload.get("desktop")
+    if not isinstance(desktop, dict):
+        return False
+    stats = desktop.get("stats")
+    scoreboard = desktop.get("scoreboard")
+    return bool(
+        isinstance(stats, dict)
+        and (
+            stats.get("teamStats")
+            or stats.get("gameStats")
+            or stats.get("playerStats")
+            or stats.get("points")
+            or stats.get("goalDifferential")
+        )
+    ) or bool(isinstance(scoreboard, dict) and scoreboard.get("days"))
+
+
+def _read_existing_payload(out_dir: Path) -> dict[str, Any] | None:
+    path = out_dir / "data.json"
+    if not path.exists():
+        return None
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        return raw if isinstance(raw, dict) else None
+    except Exception:
+        return None
 
 
 def _copy_logo_assets(out_dir: Path) -> None:
@@ -176,6 +325,7 @@ def build_payload(
         ],
         "teams": team_rows,
         "tables": table_payload,
+        "desktop": _export_desktop_data(season, start, end),
     }
 
 
@@ -218,6 +368,9 @@ def export_web(
         end=export_end,
         simulations_dir=simulations_dir,
     )
+    existing = _read_existing_payload(out_dir)
+    if existing and not _has_desktop_data(payload) and _has_desktop_data(existing):
+        payload["desktop"] = existing["desktop"]
 
     out_dir.mkdir(parents=True, exist_ok=True)
     _copy_logo_assets(out_dir)

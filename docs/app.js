@@ -11,6 +11,7 @@
   const metricLabels = Object.fromEntries(data.metrics.map((m) => [m.key, m.label]));
   const metricTitles = Object.fromEntries(data.metrics.map((m) => [m.key, m.title]));
   const byCode = new Map(data.teams.map((t) => [t.code, t]));
+  const desktop = data.desktop || {};
   const divisions = ["Pacific", "Central", "Atlantic", "Metro"];
   const tableHeaders = {
     madeplayoffs: "Playoffs",
@@ -39,6 +40,9 @@
     selectedTeam: null,
     league: "NHL",
     dateIdx: maxDateIndex(),
+    modelDateIdx: maxDesktopDateIndex("points"),
+    statsPhase: "regular",
+    gamePhase: "regular",
     metricSort: {},
     openMenu: null,
   };
@@ -55,6 +59,40 @@
 
   function table(metric) {
     return data.tables[metric] || { columns: [], rows: {} };
+  }
+
+  function desktopStats() {
+    return desktop.stats || {};
+  }
+
+  function desktopModels() {
+    return desktop.models || {};
+  }
+
+  function desktopTable(key) {
+    return desktopStats()[key] || desktopModels()[key] || null;
+  }
+
+  function maxDesktopDateIndex(key) {
+    const t = desktopTable(key);
+    return Math.max(0, ((t && t.columns) || []).length - 1);
+  }
+
+  function desktopValue(key, code, idx = state.modelDateIdx) {
+    const t = desktopTable(key);
+    if (!t || !t.rows) return null;
+    const values = t.rows[code] || [];
+    const value = values[Math.max(0, Math.min(idx, values.length - 1))];
+    return Number.isFinite(value) ? value : null;
+  }
+
+  function desktopCodes(key) {
+    const t = desktopTable(key);
+    return t && t.rows ? Object.keys(t.rows).sort() : teamCodes();
+  }
+
+  function clampDesktopDate(key, idx) {
+    return Math.max(0, Math.min(maxDesktopDateIndex(key), Number(idx) || 0));
   }
 
   function maxDateIndex() {
@@ -250,7 +288,7 @@
 
   function renderMainPage() {
     if (state.mainTab === "Scoreboard") {
-      return renderComingSoon("Scoreboard", "The desktop app loads this from live NHL/PWHL data. The static web export is currently mirroring the prediction views.");
+      return renderScoreboardPage();
     }
     if (state.mainTab === "Stats") return renderStatsPage();
     if (state.mainTab === "Predictions") return renderPredictionsPage("predTab", "Data collected from MoneyPuck.com");
@@ -260,21 +298,561 @@
 
   function renderStatsPage() {
     const tabs = ["Team Stats", "Game Stats", "Player Stats", "Goal Differential", "Points"];
+    const body = {
+      "Team Stats": renderTeamStatsPage(),
+      "Game Stats": renderGameStatsPage(),
+      "Player Stats": renderPlayerStatsPage(),
+      "Goal Differential": renderDesktopMetricView("goalDifferential", "Goal Differential", "number"),
+      "Points": renderDesktopMetricView("points", "Points", "number"),
+    }[state.statsTab] || renderComingSoon(state.statsTab, "No data.");
     return `
       <div class="nested-page">
         ${renderTabbar(tabs, state.statsTab, "stats")}
-        ${renderComingSoon(state.statsTab, "This static web build uses the desktop notebook chrome. Exporting the full Stats XML into matching web canvases is the next step.")}
+        ${body}
       </div>
     `;
   }
 
   function renderModelsPage() {
     const tabs = ["Playoff Picture", "Magic/Tragic", "Point Probabilities", "Playoff Win Probabilities"];
+    const body = {
+      "Playoff Picture": renderPlayoffPicturePage(),
+      "Magic/Tragic": renderMagicTragicPage(),
+      "Point Probabilities": renderPointProbabilitiesPage(),
+      "Playoff Win Probabilities": renderPlayoffWinProbabilitiesPage(),
+    }[state.modelsTab] || renderComingSoon(state.modelsTab, "No data.");
     return `
       <div class="nested-page">
         ${renderTabbar(tabs, state.modelsTab, "models")}
-        ${renderComingSoon(state.modelsTab, "This static web build uses the desktop notebook chrome. Exporting the full Models XML into matching web canvases is the next step.")}
+        ${body}
       </div>
+    `;
+  }
+
+  function renderScoreboardPage() {
+    const scoreboard = desktop.scoreboard || {};
+    const days = scoreboard.days || {};
+    const day = scoreboard.latestDay || Object.keys(days).sort().slice(-1)[0];
+    const games = day ? (days[day] || []) : [];
+    if (!games.length) return renderComingSoon("Scoreboard", "No exported scoreboard data is available yet.");
+    return `
+      <div class="scoreboard-page page-fill">
+        <div class="scoreboard-date">${esc(day)}</div>
+        <div class="scoreboard-grid">
+          ${games.map(renderGameCard).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderGameCard(game) {
+    const status = game.status || game.state || "";
+    return `
+      <article class="game-card">
+        <div class="game-meta"><span>${esc(game.league || "NHL")}</span><span>${esc(status)}</span></div>
+        ${renderGameTeam(game.away)}
+        ${renderGameTeam(game.home)}
+      </article>
+    `;
+  }
+
+  function renderGameTeam(team) {
+    const code = team.code || "";
+    const score = team.score ?? "";
+    return `
+      <div class="game-team" data-team="${esc(code)}">
+        <img src="${esc(logo(code))}" alt="">
+        <span>${esc(code)}</span>
+        <strong>${esc(score)}</strong>
+      </div>
+    `;
+  }
+
+  function renderPhaseButtons(phases, active, action) {
+    return `<div class="phase-row">${phases.map((phase) => `
+      <button class="tk-button ${phase === active ? "is-open" : ""}" data-action="${action}" data-phase="${esc(phase)}">${esc(phaseLabel(phase))}</button>
+    `).join("")}</div>`;
+  }
+
+  function phaseLabel(phase) {
+    return { preseason: "Preseason", regular: "Regular Season", postseason: "Postseason" }[phase] || phase;
+  }
+
+  function renderTeamStatsPage() {
+    const stats = desktopStats().teamStats;
+    if (!stats) return renderComingSoon("Team Stats", "No exported team stats data is available yet.");
+    const phases = ["preseason", "regular", "postseason"].filter((p) => stats[p]);
+    if (!phases.includes(state.statsPhase)) state.statsPhase = phases[0] || "regular";
+    const phase = stats[state.statsPhase] || stats[phases[0]];
+    const dates = phase.dates || [];
+    const day = dates[dates.length - 1];
+    const rows = ((phase.rowsByDate || {})[day] || []).slice().sort((a, b) => Number(b.pts || 0) - Number(a.pts || 0));
+    const cols = [
+      ["record", "RECORD"], ["gp", "GP"], ["w", "W"], ["l", "L"], ["pts", "PTS"],
+      ["gf", "GF"], ["ga", "GA"], ["gd", "GD"], ["p_pct", "P%"], ["w_pct", "W%"],
+    ];
+    return `
+      <div class="stats-table page-fill">
+        ${renderPhaseButtons(phases, state.statsPhase, "set-stats-phase")}
+        <div class="table-scroll">
+          <table class="tk-table wide-table">
+            <thead><tr><th class="team-cell">Team</th>${cols.map(([, h]) => `<th>${esc(h)}</th>`).join("")}</tr></thead>
+            <tbody>${rows.map((row) => `
+              <tr>
+                <td class="team-cell ${row.team === state.selectedTeam ? "selected-outline" : ""}" data-team="${esc(row.team)}">
+                  <div class="team-cell-inner"><img class="team-logo" src="${esc(logo(row.team))}" alt=""><span>${esc(row.team)}</span></div>
+                </td>
+                ${cols.map(([key]) => renderStatCell(row[key], key, rows)).join("")}
+              </tr>
+            `).join("")}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderStatCell(value, key, rows) {
+    if (key === "record") return `<td>${esc(value || "")}</td>`;
+    const vals = rows.map((r) => Number(r[key])).filter(Number.isFinite).sort((a, b) => a - b);
+    const val = Number(value);
+    const rank = vals.length <= 1 || !Number.isFinite(val) ? 0.5 : vals.findIndex((v) => v >= val) / (vals.length - 1);
+    const inverse = key === "l" || key === "ga";
+    const bg = rankHeat(inverse ? 1 - rank : rank);
+    const text = key.endsWith("_pct") && Number.isFinite(val) ? `${(val * 100).toFixed(1)}%` : value;
+    return `<td style="background:${bg};color:${textForBg(bg)}">${esc(text)}</td>`;
+  }
+
+  function renderGameStatsPage() {
+    const stats = desktopStats().gameStats;
+    if (!stats) return renderComingSoon("Game Stats", "No exported game stats data is available yet.");
+    const phases = ["preseason", "regular", "postseason"].filter((p) => stats[p]);
+    if (!phases.includes(state.gamePhase)) state.gamePhase = phases[0] || "regular";
+    const phase = stats[state.gamePhase] || stats[phases[0]];
+    const cols = phase.date_cols || [];
+    const rows = (phase.rows || []).slice().sort((a, b) => teamName(a.team).localeCompare(teamName(b.team)));
+    return `
+      <div class="stats-table page-fill">
+        ${renderPhaseButtons(phases, state.gamePhase, "set-game-phase")}
+        <div class="table-scroll">
+          <table class="tk-table wide-table">
+            <thead><tr><th class="team-cell">Team</th>${cols.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead>
+            <tbody>${rows.map((row) => `
+              <tr>
+                <td class="team-cell ${row.team === state.selectedTeam ? "selected-outline" : ""}" data-team="${esc(row.team)}">
+                  <div class="team-cell-inner"><img class="team-logo" src="${esc(logo(row.team))}" alt=""><span>${esc(row.team)}</span></div>
+                </td>
+                ${cols.map((col) => renderOutcomeCell(row[col] || "")).join("")}
+              </tr>
+            `).join("")}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderOutcomeCell(value) {
+    const colors = { W: "#265a2f", OTW: "#2f7040", SOW: "#2f7040", L: "#5a2727", OTL: "#5c4a28", SOL: "#5c4a28" };
+    const bg = colors[value] || "#262626";
+    return `<td style="background:${bg};color:#f7f7f7">${esc(value)}</td>`;
+  }
+
+  function renderPlayerStatsPage() {
+    const payload = desktopStats().playerStats;
+    if (!payload) return renderComingSoon("Player Stats", "No exported player stats data is available yet.");
+    return `
+      <div class="players-grid page-fill">
+        ${renderPlayerGroup("Skaters", payload.skaters || {}, ["team", "Goals", "Assists", "Points", "Shots", "Hits", "Blocks", "+/-", "PIM"])}
+        ${renderPlayerGroup("Goalies", payload.goalies || {}, ["team", "Wins", "Losses", "OTL", "Save %", "Shutouts", "Saves", "Games Started", "GAA"])}
+      </div>
+    `;
+  }
+
+  function renderPlayerGroup(title, rowsObj, cols) {
+    const rows = Object.entries(rowsObj).sort((a, b) => Number(b[1].Points || b[1].Wins || 0) - Number(a[1].Points || a[1].Wins || 0)).slice(0, 30);
+    return `
+      <section class="player-panel">
+        <h2>${esc(title)}</h2>
+        <div class="table-scroll">
+          <table class="tk-table wide-table">
+            <thead><tr><th>Player</th>${cols.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead>
+            <tbody>${rows.map(([name, row]) => `
+              <tr>
+                <td>${esc(name)}</td>
+                ${cols.map((c) => c === "team" ? `<td data-team="${esc(row.team)}">${esc(row.team || "")}</td>` : `<td>${esc(formatPlayerValue(c, row[c]))}</td>`).join("")}
+              </tr>
+            `).join("")}</tbody>
+          </table>
+        </div>
+      </section>
+    `;
+  }
+
+  function formatPlayerValue(key, value) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return value || "";
+    if (key === "Save %") return num.toFixed(3);
+    if (key === "GAA") return num.toFixed(2);
+    return Number.isInteger(num) ? String(num) : num.toFixed(1);
+  }
+
+  function renderDesktopMetricView(key, title, valueKind) {
+    const payload = desktopTable(key);
+    if (!payload) return renderComingSoon(title, `No exported ${title} data is available yet.`);
+    const rows = desktopCodes(key).sort((a, b) => (desktopValue(key, b, clampDesktopDate(key, state.dateIdx)) ?? -999) - (desktopValue(key, a, clampDesktopDate(key, state.dateIdx)) ?? -999));
+    return renderGenericMetricView(payload, key, title, valueKind, rows, clampDesktopDate(key, state.dateIdx));
+  }
+
+  function renderGenericMetricView(payload, key, title, valueKind, rows, idx) {
+    return `
+      <div class="metric-view">
+        <div class="metric-top">
+          <div class="heatmap-wrap">${renderGenericHeatmap(payload, key, rows, idx, valueKind)}</div>
+          <div class="bar-wrap">${renderGenericBars(payload, key, rows, idx, valueKind)}</div>
+        </div>
+        <div class="metric-bottom">
+          <div class="graph-wrap">${renderGenericLineGraph(payload, key, rows, idx, valueKind)}</div>
+          <div>
+            <div class="metric-title">${esc(title)}</div>
+            <div class="logos-wrap">${renderLogoGrid(rows)}</div>
+          </div>
+        </div>
+        ${renderDesktopStepper(key, idx)}
+      </div>
+    `;
+  }
+
+  function genericValue(payload, code, idx) {
+    const values = (payload.rows || {})[code] || [];
+    const value = values[Math.max(0, Math.min(idx, values.length - 1))];
+    return Number.isFinite(value) ? value : null;
+  }
+
+  function formatGeneric(value, valueKind) {
+    if (!Number.isFinite(value)) return "";
+    if (valueKind === "percent") return pct(value);
+    return Number.isInteger(value) ? String(value) : value.toFixed(1);
+  }
+
+  function rankHeat(rank) {
+    const t = Math.round(Math.max(0, Math.min(1, rank)) * 31) / 31;
+    let r;
+    let g;
+    let b = 0;
+    if (t <= 0.5) {
+      const u = t * 2;
+      r = 255;
+      g = Math.round(255 * u);
+    } else {
+      const u = (t - 0.5) * 2;
+      r = Math.round(255 * (1 - u));
+      g = 255;
+    }
+    return blend(rgbToHex(Math.round(r * 0.56), Math.round(g * 0.56), Math.round(b * 0.56)), "#262626", 0.12);
+  }
+
+  function genericHeat(payload, code, idx, allowNegative = false) {
+    const vals = Object.keys(payload.rows || {})
+      .map((c) => genericValue(payload, c, idx))
+      .filter(Number.isFinite)
+      .sort((a, b) => a - b);
+    const val = genericValue(payload, code, idx);
+    if (!Number.isFinite(val) || !vals.length) return "#262626";
+    if (allowNegative) {
+      const min = vals[0];
+      const max = vals[vals.length - 1];
+      const t = max === min ? 0.5 : (val - min) / (max - min);
+      return rankHeat(t);
+    }
+    const rank = vals.length === 1 ? 0.5 : vals.findIndex((v) => v >= val) / (vals.length - 1);
+    return rankHeat(rank);
+  }
+
+  function renderGenericHeatmap(payload, key, rows, selectedIdx, valueKind) {
+    const cols = payload.columns || [];
+    const allowNegative = key === "goalDifferential";
+    return `
+      <table class="tk-table">
+        <thead>
+          <tr><th class="team-cell">Team</th>${cols.map((col, idx) => `<th data-action="select-desktop-date" data-metric="${esc(key)}" data-idx="${idx}">${esc(col)}</th>`).join("")}</tr>
+        </thead>
+        <tbody>${rows.map((code) => `
+          <tr>
+            <td class="team-cell ${code === state.selectedTeam ? "selected-outline" : ""}" data-team="${esc(code)}">
+              <div class="team-cell-inner"><img class="team-logo" src="${esc(logo(code))}" alt=""><span>${esc(code)}</span></div>
+            </td>
+            ${cols.map((_, idx) => {
+              const bg = genericHeat(payload, code, idx, allowNegative);
+              const cls = idx === selectedIdx ? "selected-outline" : "";
+              return `<td class="${cls}" style="background:${bg};color:${textForBg(bg)}">${esc(formatGeneric(genericValue(payload, code, idx), valueKind))}</td>`;
+            }).join("")}
+          </tr>
+        `).join("")}</tbody>
+      </table>
+    `;
+  }
+
+  function renderGenericBars(payload, key, rows, idx, valueKind) {
+    const vals = rows.map((code) => genericValue(payload, code, idx)).filter(Number.isFinite);
+    const min = key === "goalDifferential" ? Math.min(0, ...vals) : 0;
+    const max = Math.max(1, ...vals);
+    return `
+      <table class="tk-table" style="width:100%"><thead><tr><th>${esc((payload.columns || [])[idx] || "")}</th></tr></thead></table>
+      <div style="padding:0 8px">
+        ${rows.map((code) => {
+          const value = genericValue(payload, code, idx) || 0;
+          const width = Math.max(1, (value - min) / Math.max(1, max - min) * 100);
+          const c0 = blend(teamColor(code), "#262626", state.selectedTeam && state.selectedTeam !== code ? 0.7 : 0.35);
+          const c1 = blend(teamColor(code), "#ffffff", state.selectedTeam && state.selectedTeam !== code ? 0.72 : 0.45);
+          return `<div class="bar-row" data-team="${esc(code)}"><div class="bar-track"><div class="bar-fill" style="width:${width}%;background:linear-gradient(90deg,${c0},${c1})"></div></div><div class="bar-value">${esc(formatGeneric(value, valueKind))}</div></div>`;
+        }).join("")}
+      </div>
+    `;
+  }
+
+  function renderGenericLineGraph(payload, key, rows, selectedIdx, valueKind) {
+    const cols = payload.columns || [];
+    const width = Math.max(800, cols.length * 8);
+    const height = 310;
+    const pad = { left: 54, right: 18, top: 16, bottom: 34 };
+    const allVals = rows.flatMap((code) => ((payload.rows || {})[code] || []).filter(Number.isFinite));
+    const min = key === "goalDifferential" ? Math.min(0, ...allVals) : 0;
+    const max = Math.max(1, ...allVals);
+    const xFor = (i) => pad.left + i / Math.max(1, cols.length - 1) * (width - pad.left - pad.right);
+    const yFor = (v) => pad.top + (1 - ((v - min) / Math.max(1, max - min))) * (height - pad.top - pad.bottom);
+    const ticks = [min, (min + max) / 2, max];
+    const grid = ticks.map((tick) => {
+      const y = yFor(tick);
+      return `<line class="chart-grid" x1="${pad.left}" y1="${y}" x2="${width - pad.right}" y2="${y}"></line><text class="chart-axis" x="${pad.left - 8}" y="${y + 4}" text-anchor="end">${esc(formatGeneric(tick, valueKind))}</text>`;
+    }).join("");
+    const lines = rows.map((code) => {
+      const values = (payload.rows || {})[code] || [];
+      const points = values.map((v, idx) => `${idx === 0 ? "M" : "L"} ${xFor(idx).toFixed(1)} ${yFor(Number.isFinite(v) ? v : min).toFixed(1)}`).join(" ");
+      const color = state.selectedTeam && state.selectedTeam !== code ? blend(teamColor(code), "#262626", 0.65) : teamColor(code);
+      return `<path class="line-path ${state.selectedTeam === code ? "is-selected" : ""}" d="${points}" stroke="${esc(color)}" data-team="${esc(code)}"></path>`;
+    }).join("");
+    const dateX = xFor(selectedIdx);
+    return `<svg class="chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">${grid}<line class="chart-grid" x1="${dateX}" y1="${pad.top}" x2="${dateX}" y2="${height - pad.bottom}" stroke="#6a6a6a" stroke-width="2"></line>${lines}</svg>`;
+  }
+
+  function pointsPayload() {
+    return desktopModels().points || desktopStats().points;
+  }
+
+  function modelDayLabel() {
+    const p = pointsPayload();
+    return p ? (p.columns || [])[state.modelDateIdx] || "" : "";
+  }
+
+  function pointsSnapshot() {
+    const p = pointsPayload();
+    if (!p) return {};
+    const out = {};
+    Object.keys(p.rows || {}).forEach((code) => {
+      out[code] = genericValue(p, code, state.modelDateIdx) || 0;
+    });
+    return out;
+  }
+
+  function latestTeamStatMap() {
+    const stats = desktopModels().teamStats || desktopStats().teamStats;
+    const regular = stats && (stats.regular || stats.postseason || stats.preseason);
+    if (!regular) return {};
+    const dates = regular.dates || [];
+    const day = dates[Math.min(dates.length - 1, state.modelDateIdx)] || dates[dates.length - 1];
+    const rows = ((regular.rowsByDate || {})[day] || []);
+    return Object.fromEntries(rows.map((r) => [r.team, r]));
+  }
+
+  function sortedByPoints(codes, pts) {
+    return codes.slice().sort((a, b) => (pts[b] || 0) - (pts[a] || 0) || teamName(a).localeCompare(teamName(b)));
+  }
+
+  function playoffColumns(pts) {
+    const out = { Pacific: [], Central: [], Atlantic: [], Metro: [], WestWC: [], EastWC: [] };
+    divisions.forEach((div) => {
+      out[div] = sortedByPoints(teamCodes().filter((c) => (byCode.get(c) || {}).division === div), pts);
+    });
+    const westTaken = new Set([...out.Pacific.slice(0, 3), ...out.Central.slice(0, 3)]);
+    const eastTaken = new Set([...out.Atlantic.slice(0, 3), ...out.Metro.slice(0, 3)]);
+    const west = sortedByPoints(teamCodes().filter((c) => (byCode.get(c) || {}).conference === "West"), pts);
+    const east = sortedByPoints(teamCodes().filter((c) => (byCode.get(c) || {}).conference === "East"), pts);
+    out.WestWC = west.filter((c) => !westTaken.has(c));
+    out.EastWC = east.filter((c) => !eastTaken.has(c));
+    return out;
+  }
+
+  function bracketTeams(pts) {
+    const c = playoffColumns(pts);
+    return [
+      c.Pacific[0], c.WestWC[1], c.Pacific[1], c.Pacific[2],
+      c.Central[0], c.WestWC[0], c.Central[1], c.Central[2],
+      c.Atlantic[0], c.EastWC[1], c.Atlantic[1], c.Atlantic[2],
+      c.Metro[0], c.EastWC[0], c.Metro[1], c.Metro[2],
+    ].filter(Boolean);
+  }
+
+  function renderModelStepper() {
+    const p = pointsPayload();
+    const max = Math.max(0, ((p && p.columns) || []).length - 1);
+    const left = max <= 0 ? 0 : state.modelDateIdx / max * 100;
+    return `
+      <div class="step-row">
+        <button type="button" data-action="model-step-date" data-delta="-1">◀</button>
+        <div class="slider-track" data-action="model-slider"><div class="slider-thumb" style="left:${left}%"></div></div>
+        <button type="button" data-action="model-step-date" data-delta="1">▶</button>
+      </div>
+    `;
+  }
+
+  function renderPlayoffPicturePage() {
+    const p = pointsPayload();
+    if (!p) return renderComingSoon("Playoff Picture", "No exported points history data is available yet.");
+    const pts = pointsSnapshot();
+    const cols = playoffColumns(pts);
+    return `
+      <div class="model-page page-fill">
+        ${renderModelStepper()}
+        <div class="model-date">${esc(modelDayLabel())}</div>
+        <div class="playoff-layout">
+          <div class="standings-block">
+            ${["Pacific", "Central", "Atlantic", "Metro"].map((div) => renderStandingsColumn(div, cols[div], pts)).join("")}
+            ${renderStandingsColumn("West WC", cols.WestWC, pts)}
+            ${renderStandingsColumn("East WC", cols.EastWC, pts)}
+          </div>
+          <div class="bracket-block">${renderBracket(pts)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderStandingsColumn(title, codes, pts) {
+    return `<section class="standings-col"><h3>${esc(title)}</h3>${codes.slice(0, 8).map((code) => `
+      <div class="standing-row" data-team="${esc(code)}"><img src="${esc(logo(code))}" alt=""><span>${esc(code)}</span><strong>${esc(pts[code] || 0)}</strong></div>
+    `).join("")}</section>`;
+  }
+
+  function renderBracket(pts) {
+    const teams = bracketTeams(pts);
+    const pairs = [];
+    for (let i = 0; i < teams.length; i += 2) pairs.push([teams[i], teams[i + 1]]);
+    return pairs.map(([a, b]) => `
+      <div class="series-card">
+        ${renderBracketTeam(a, pts)}
+        ${renderBracketTeam(b, pts)}
+      </div>
+    `).join("");
+  }
+
+  function renderBracketTeam(code, pts) {
+    if (!code) return `<div class="bracket-team empty"></div>`;
+    return `<div class="bracket-team" data-team="${esc(code)}"><span>${esc(code)}</span><img src="${esc(logo(code))}" alt=""><strong>${esc(pts[code] || 0)}</strong></div>`;
+  }
+
+  function renderMagicTragicPage() {
+    const p = pointsPayload();
+    if (!p) return renderComingSoon("Magic/Tragic", "No exported points history data is available yet.");
+    const pts = pointsSnapshot();
+    const stats = latestTeamStatMap();
+    const rows = sortedByPoints(teamCodes(), pts);
+    const eastCut = sortedByPoints(rows.filter((c) => (byCode.get(c) || {}).conference === "East"), pts)[8] || "";
+    const westCut = sortedByPoints(rows.filter((c) => (byCode.get(c) || {}).conference === "West"), pts)[8] || "";
+    return `
+      <div class="model-page page-fill">
+        ${renderModelStepper()}
+        <div class="model-date">Magic/Tragic - ${esc(modelDayLabel())}</div>
+        <div class="table-scroll">
+          <table class="tk-table wide-table">
+            <thead><tr><th class="team-cell">Team</th><th>PTS</th><th>GR</th><th>MAX</th><th>Playoff Magic</th><th>Elim Tragic</th></tr></thead>
+            <tbody>${rows.map((code) => {
+              const row = stats[code] || {};
+              const gr = Number(row.gr ?? Math.max(0, 82 - Number(row.gp || 0)));
+              const maxPts = Number(row.mxp ?? ((pts[code] || 0) + gr * 2));
+              const cutTeam = (byCode.get(code) || {}).conference === "East" ? eastCut : westCut;
+              const cut = cutTeam ? (pts[cutTeam] || 0) : 0;
+              const magic = Math.max(0, Math.ceil((cut + 1 - (pts[code] || 0)) / 2));
+              const tragic = maxPts < cut + 1 ? "X" : Math.max(0, Math.ceil((maxPts - cut) / 2));
+              return `<tr><td class="team-cell" data-team="${esc(code)}"><div class="team-cell-inner"><img class="team-logo" src="${esc(logo(code))}" alt=""><span>${esc(code)}</span></div></td><td>${esc(pts[code] || 0)}</td><td>${esc(gr)}</td><td>${esc(maxPts)}</td><td>${esc(magic === 0 ? "*" : magic)}</td><td>${esc(tragic)}</td></tr>`;
+            }).join("")}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPointProbabilitiesPage() {
+    const p = pointsPayload();
+    if (!p) return renderComingSoon("Point Probabilities", "No exported points history data is available yet.");
+    const pts = pointsSnapshot();
+    const stats = latestTeamStatMap();
+    const rows = sortedByPoints(teamCodes(), pts);
+    const totals = [...new Set(rows.flatMap((code) => {
+      const gr = Number((stats[code] || {}).gr ?? 0);
+      const cur = Number(pts[code] || 0);
+      return [cur, cur + Math.ceil(gr), cur + gr * 2];
+    }))].sort((a, b) => a - b).slice(-28);
+    return `
+      <div class="model-page page-fill">
+        ${renderModelStepper()}
+        <div class="model-date">Point Probabilities - ${esc(modelDayLabel())}</div>
+        <div class="table-scroll">
+          <table class="tk-table wide-table">
+            <thead><tr><th class="team-cell">Team</th>${totals.map((n) => `<th>${esc(n)}</th>`).join("")}</tr></thead>
+            <tbody>${rows.map((code) => {
+              const gr = Number((stats[code] || {}).gr ?? 0);
+              const cur = Number(pts[code] || 0);
+              const center = cur + gr;
+              return `<tr><td class="team-cell" data-team="${esc(code)}"><div class="team-cell-inner"><img class="team-logo" src="${esc(logo(code))}" alt=""><span>${esc(code)}</span></div></td>${totals.map((n) => {
+                const prob = Math.max(0, 1 - Math.abs(n - center) / Math.max(1, gr * 2));
+                const bg = rankHeat(prob);
+                return `<td style="background:${bg};color:${textForBg(bg)}">${prob > 0 ? esc((prob * 100).toFixed(1) + "%") : ""}</td>`;
+              }).join("")}</tr>`;
+            }).join("")}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPlayoffWinProbabilitiesPage() {
+    const p = pointsPayload();
+    if (!p) return renderComingSoon("Playoff Win Probabilities", "No exported points history data is available yet.");
+    const pts = pointsSnapshot();
+    const pairs = [];
+    const teams = bracketTeams(pts);
+    for (let i = 0; i < teams.length; i += 2) if (teams[i] && teams[i + 1]) pairs.push([teams[i], teams[i + 1]]);
+    return `
+      <div class="model-page page-fill">
+        <div class="model-date">Playoff Win Probabilities - ${esc(modelDayLabel())}</div>
+        <div class="table-scroll">
+          <table class="tk-table wide-table">
+            <thead><tr><th>Series</th><th>Team</th><th>in 4</th><th>in 5</th><th>in 6</th><th>in 7</th><th>Prediction</th></tr></thead>
+            <tbody>${pairs.map(([a, b]) => renderSeriesRows(a, b, pts)).join("")}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  function seriesProb(a, b, pts) {
+    const d = ((pts[a] || 0) - (pts[b] || 0)) / 8;
+    return Math.max(0.08, Math.min(0.92, 1 / (1 + Math.exp(-d))));
+  }
+
+  function lengthProbs(p) {
+    const q = 1 - p;
+    return [p ** 4, 4 * p ** 4 * q, 10 * p ** 4 * q ** 2, 20 * p ** 4 * q ** 3];
+  }
+
+  function renderSeriesRows(a, b, pts) {
+    const pa = seriesProb(a, b, pts);
+    const pb = 1 - pa;
+    const av = lengthProbs(pa);
+    const bv = lengthProbs(pb);
+    const pred = pa >= pb ? `${a} in ${4 + av.indexOf(Math.max(...av))}` : `${b} in ${4 + bv.indexOf(Math.max(...bv))}`;
+    const cells = (vals) => vals.map((v) => `<td>${esc((v * 100).toFixed(2) + "%")}</td>`).join("");
+    return `
+      <tr><td rowspan="2">${esc(a)} vs ${esc(b)}</td><td data-team="${esc(a)}">${esc(a)}</td>${cells(av)}<td rowspan="2">${esc(pred)}</td></tr>
+      <tr><td data-team="${esc(b)}">${esc(b)}</td>${cells(bv)}</tr>
     `;
   }
 
@@ -321,6 +899,20 @@
           <div class="slider-thumb" style="left:${left}%"></div>
         </div>
         <button type="button" data-action="step-date" data-delta="1">▶</button>
+      </div>
+    `;
+  }
+
+  function renderDesktopStepper(key, idx) {
+    const max = maxDesktopDateIndex(key);
+    const left = max <= 0 ? 0 : idx / max * 100;
+    return `
+      <div class="step-row">
+        <button type="button" data-action="desktop-step-date" data-metric="${esc(key)}" data-delta="-1">◀</button>
+        <div class="slider-track" data-action="desktop-slider" data-metric="${esc(key)}">
+          <div class="slider-thumb" style="left:${left}%"></div>
+        </div>
+        <button type="button" data-action="desktop-step-date" data-metric="${esc(key)}" data-delta="1">▶</button>
       </div>
     `;
   }
@@ -628,6 +1220,8 @@
       if (scope === "models") state.modelsTab = label;
       if (scope === "predTab") state.predTab = label;
       if (scope === "pred2Tab") state.pred2Tab = label;
+      if (scope === "stats" && label === "Points") state.dateIdx = clampDesktopDate("points", state.dateIdx);
+      if (scope === "stats" && label === "Goal Differential") state.dateIdx = clampDesktopDate("goalDifferential", state.dateIdx);
       state.openMenu = null;
       render();
       return;
@@ -646,6 +1240,7 @@
       if (action === "reset") {
         state.selectedTeam = null;
         state.dateIdx = maxDateIndex();
+        state.modelDateIdx = maxDesktopDateIndex("points");
         state.metricSort = {};
         state.openMenu = null;
       }
@@ -664,6 +1259,38 @@
       }
       if (action === "select-date") {
         state.dateIdx = clampDate(Number(actionEl.dataset.idx));
+      }
+      if (action === "select-desktop-date") {
+        const metric = actionEl.dataset.metric || "points";
+        state.dateIdx = clampDesktopDate(metric, Number(actionEl.dataset.idx));
+      }
+      if (action === "desktop-step-date") {
+        const metric = actionEl.dataset.metric || "points";
+        state.dateIdx = clampDesktopDate(metric, state.dateIdx + Number(actionEl.dataset.delta || 0));
+        state.openMenu = null;
+      }
+      if (action === "desktop-slider") {
+        const metric = actionEl.dataset.metric || "points";
+        const rect = actionEl.getBoundingClientRect();
+        const rel = (event.clientX - rect.left) / Math.max(1, rect.width);
+        state.dateIdx = clampDesktopDate(metric, Math.round(rel * maxDesktopDateIndex(metric)));
+        state.openMenu = null;
+      }
+      if (action === "model-step-date") {
+        state.modelDateIdx = clampDesktopDate("points", state.modelDateIdx + Number(actionEl.dataset.delta || 0));
+        state.openMenu = null;
+      }
+      if (action === "model-slider") {
+        const rect = actionEl.getBoundingClientRect();
+        const rel = (event.clientX - rect.left) / Math.max(1, rect.width);
+        state.modelDateIdx = clampDesktopDate("points", Math.round(rel * maxDesktopDateIndex("points")));
+        state.openMenu = null;
+      }
+      if (action === "set-stats-phase") {
+        state.statsPhase = actionEl.dataset.phase || state.statsPhase;
+      }
+      if (action === "set-game-phase") {
+        state.gamePhase = actionEl.dataset.phase || state.gamePhase;
       }
       if (action === "pie-sort-team") {
         state.metricSort.__pie = "team";
