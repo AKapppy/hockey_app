@@ -189,6 +189,27 @@ def _moneypuck_team_codes_in_text(text: str) -> list[str]:
     return [code for code, _ in sorted(found.items(), key=lambda kv: kv[1])]
 
 
+def _as_dict(value: Any) -> dict[str, Any]:
+    return cast(dict[str, Any], value) if isinstance(value, dict) else {}
+
+
+def _as_list(value: Any) -> list[Any]:
+    return cast(list[Any], value) if isinstance(value, list) else []
+
+
+def _as_str_set(value: Any) -> set[str]:
+    if isinstance(value, set):
+        return {str(x) for x in value}
+    if isinstance(value, (list, tuple)):
+        return {str(x) for x in value}
+    return set()
+
+
+def _first_dict(value: Any) -> dict[str, Any]:
+    rows = _as_list(value)
+    return _as_dict(rows[0]) if rows else {}
+
+
 def _moneypuck_parse_row_date(text: str, *, selected_date: dt.date) -> Optional[dt.date]:
     match = re.search(r"\b(\d{1,2})[/-](\d{1,2})(?:[/-](\d{2,4}))?\b", str(text or ""))
     if not match:
@@ -555,10 +576,10 @@ def _odds_value_to_implied_prob(raw: Any) -> Optional[float]:
 
 
 def _implied_probs_from_game_odds(game: dict[str, Any]) -> Optional[tuple[float, float]]:
-    away = game.get("awayTeam") if isinstance(game.get("awayTeam"), dict) else {}
-    home = game.get("homeTeam") if isinstance(game.get("homeTeam"), dict) else {}
-    away_rows = away.get("odds") if isinstance(away.get("odds"), list) else []
-    home_rows = home.get("odds") if isinstance(home.get("odds"), list) else []
+    away = _as_dict(game.get("awayTeam"))
+    home = _as_dict(game.get("homeTeam"))
+    away_rows = _as_list(away.get("odds"))
+    home_rows = _as_list(home.get("odds"))
 
     def _provider_prob_map(rows: list[Any]) -> tuple[dict[int, float], list[float]]:
         by_provider: dict[int, float] = {}
@@ -575,11 +596,7 @@ def _implied_probs_from_game_odds(game: dict[str, Any]) -> Optional[tuple[float,
                 p = _odds_value_to_implied_prob(row.get("moneyline"))
             if p is None:
                 continue
-            pid_raw = row.get("providerId")
-            try:
-                pid = int(float(pid_raw))
-            except Exception:
-                pid = -1
+            pid = _to_int(row.get("providerId"), default=-1)
             if pid >= 0 and pid not in by_provider:
                 by_provider[pid] = p
             else:
@@ -616,8 +633,8 @@ def _implied_probs_from_game_odds(game: dict[str, Any]) -> Optional[tuple[float,
 
 
 def _implied_probs_from_records(game: dict[str, Any]) -> Optional[tuple[float, float]]:
-    away = game.get("awayTeam") if isinstance(game.get("awayTeam"), dict) else {}
-    home = game.get("homeTeam") if isinstance(game.get("homeTeam"), dict) else {}
+    away = _as_dict(game.get("awayTeam"))
+    home = _as_dict(game.get("homeTeam"))
 
     def _points_pct(record_text: Any) -> Optional[float]:
         s = str(record_text or "").strip()
@@ -766,6 +783,35 @@ def _parse_start_local(g: dict[str, Any], tz: ZoneInfo) -> Optional[dt.datetime]
     return dtu.astimezone(tz)
 
 
+def _parse_status_time_local(
+    g: dict[str, Any],
+    tz: ZoneInfo,
+    selected_date: dt.date,
+) -> Optional[dt.datetime]:
+    stxt = str(g.get("statusText") or "").strip().upper()
+    m = re.search(r"\b(\d{1,2})(?::(\d{2}))?\s*([AP]M)\b", stxt)
+    if not m:
+        return None
+    hour = int(m.group(1))
+    minute = int(m.group(2) or 0)
+    ampm = m.group(3)
+    if hour == 12:
+        hour = 0
+    if ampm == "PM":
+        hour += 12
+    try:
+        return dt.datetime(
+            selected_date.year,
+            selected_date.month,
+            selected_date.day,
+            hour,
+            minute,
+            tzinfo=tz,
+        )
+    except Exception:
+        return None
+
+
 def _future_big_text(g: dict[str, Any], tz: ZoneInfo) -> str:
     st = _parse_start_local(g, tz)
     if st:
@@ -776,9 +822,20 @@ def _future_big_text(g: dict[str, Any], tz: ZoneInfo) -> str:
 
     # PWHL feed often stores only a textual time in statusText (e.g. "7:00 PM EST").
     stxt = str(g.get("statusText") or "").strip().upper()
-    m = re.search(r"\b(\d{1,2}:\d{2}\s*[AP]M)\b", stxt)
+    m = re.search(r"\b(\d{1,2})(?::(\d{2}))?\s*([AP]M)\b", stxt)
     if m:
-        return m.group(1).replace("  ", " ")
+        hour = int(m.group(1))
+        minute = int(m.group(2) or 0)
+        ampm = m.group(3)
+        try:
+            fake = dt.datetime(2000, 1, 1, hour % 12 + (12 if ampm == "PM" and hour != 12 else 0), minute)
+            return fake.strftime("%-I:%M %p")  # mac
+        except Exception:
+            try:
+                fake = dt.datetime(2000, 1, 1, hour % 12 + (12 if ampm == "PM" and hour != 12 else 0), minute)
+                return fake.strftime("%I:%M %p").lstrip("0")  # windows
+            except Exception:
+                return f"{m.group(1)}:{str(minute).zfill(2)} {ampm}"
     return "TBD"
 
 
@@ -1261,9 +1318,9 @@ def _norm_abbrev(v: Any, fallback: str = "TBD") -> str:
 
 
 def _espn_state(event: dict[str, Any]) -> str:
-    comp = (event.get("competitions") or [{}])[0] or {}
-    st = (comp.get("status") or event.get("status") or {})
-    stype = (st.get("type") or {})
+    comp = _first_dict(event.get("competitions"))
+    st = _as_dict(comp.get("status") or event.get("status"))
+    stype = _as_dict(st.get("type"))
     state = str(stype.get("state") or "").lower()
     if bool(stype.get("completed")) or state in {"post"}:
         return "FINAL"
@@ -1273,9 +1330,9 @@ def _espn_state(event: dict[str, Any]) -> str:
 
 
 def _espn_status_text(event: dict[str, Any]) -> str:
-    comp = (event.get("competitions") or [{}])[0] or {}
-    st = (comp.get("status") or event.get("status") or {})
-    stype = (st.get("type") or {})
+    comp = _first_dict(event.get("competitions"))
+    st = _as_dict(comp.get("status") or event.get("status"))
+    stype = _as_dict(st.get("type"))
     for k in ("shortDetail", "detail", "description"):
         v = stype.get(k) or st.get(k)
         if isinstance(v, str) and v.strip():
@@ -1301,19 +1358,16 @@ def _clock_remaining_from_elapsed_20(display_clock: Any) -> str:
 
 
 def _espn_period_number(event: dict[str, Any]) -> Optional[int]:
-    comp = (event.get("competitions") or [{}])[0] or {}
-    st = (comp.get("status") or event.get("status") or {})
-    try:
-        p = int(st.get("period"))
-        return p if p > 0 else None
-    except Exception:
-        return None
+    comp = _first_dict(event.get("competitions"))
+    st = _as_dict(comp.get("status") or event.get("status"))
+    p = _to_int(st.get("period"), default=0)
+    return p if p > 0 else None
 
 
 def _espn_clock_remaining(event: dict[str, Any], *, olympics_elapsed_clock: bool) -> Optional[str]:
-    comp = (event.get("competitions") or [{}])[0] or {}
-    st = (comp.get("status") or event.get("status") or {})
-    state = str(((st.get("type") or {}).get("state") or "")).lower()
+    comp = _first_dict(event.get("competitions"))
+    st = _as_dict(comp.get("status") or event.get("status"))
+    state = str(_as_dict(st.get("type")).get("state") or "").lower()
     if state in {"post", "final"}:
         return None
     disp = st.get("displayClock")
@@ -1332,7 +1386,7 @@ def _espn_clock_remaining(event: dict[str, Any], *, olympics_elapsed_clock: bool
 
 def _espn_round_text(event: dict[str, Any], default_league: str) -> str:
     bits: list[str] = []
-    comp = (event.get("competitions") or [{}])[0] or {}
+    comp = _first_dict(event.get("competitions"))
     for k in ("description", "shortName", "name", "headline", "title"):
         v = comp.get(k)
         if isinstance(v, str) and v.strip():
@@ -1389,7 +1443,7 @@ def _espn_league_text(event: dict[str, Any]) -> str:
                 v = lg.get(k)
                 if isinstance(v, str) and v.strip():
                     vals.append(v.strip())
-    comp = (event.get("competitions") or [{}])[0] or {}
+    comp = _first_dict(event.get("competitions"))
     lg = comp.get("league") or {}
     if isinstance(lg, dict):
         for k in ("name", "shortName", "abbreviation", "slug"):
@@ -1406,22 +1460,22 @@ def _convert_espn_events(
     include_round_text: bool = False,
 ) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
-    events = payload.get("events") or []
+    events = _as_list(payload.get("events"))
     league_u = str(league_label or "").upper()
     olympics_elapsed_clock = league_u.startswith("OLYMPICS")
     for ev in events:
         if not isinstance(ev, dict):
             continue
-        comp = (ev.get("competitions") or [{}])[0] or {}
-        competitors = comp.get("competitors") or []
+        comp = _first_dict(ev.get("competitions"))
+        competitors = _as_list(comp.get("competitors"))
         away: dict[str, Any] | None = None
         home: dict[str, Any] | None = None
         for c in competitors:
             if not isinstance(c, dict):
                 continue
             side = str(c.get("homeAway") or "").lower()
-            team = c.get("team") or {}
-            stats_list = c.get("statistics") if isinstance(c.get("statistics"), list) else []
+            team = _as_dict(c.get("team"))
+            stats_list = _as_list(c.get("statistics"))
             shots: Optional[int] = None
             for srow in stats_list:
                 if not isinstance(srow, dict):
@@ -1437,16 +1491,16 @@ def _convert_espn_events(
                         break
 
             goal_scorers: list[dict[str, Any]] = []
-            leaders = c.get("leaders") if isinstance(c.get("leaders"), list) else []
+            leaders = _as_list(c.get("leaders"))
             for ldr in leaders:
                 if not isinstance(ldr, dict):
                     continue
                 if str(ldr.get("name") or "").lower() != "goals":
                     continue
-                for item in ldr.get("leaders") or []:
+                for item in _as_list(ldr.get("leaders")):
                     if not isinstance(item, dict):
                         continue
-                    ath = item.get("athlete") or {}
+                    ath = _as_dict(item.get("athlete"))
                     nm = (
                         str((ath.get("displayName") or ath.get("fullName") or item.get("displayValue") or "")).strip()
                     )
@@ -1469,12 +1523,12 @@ def _convert_espn_events(
             elif side == "home":
                 home = row
         if away is None and len(competitors) >= 1:
-            c = competitors[0] or {}
-            team = c.get("team") or {}
+            c = _as_dict(competitors[0])
+            team = _as_dict(c.get("team"))
             away = {"abbrev": _norm_abbrev(team.get("abbreviation") or team.get("displayName")), "score": _to_int(c.get("score"), 0)}
         if home is None and len(competitors) >= 2:
-            c = competitors[1] or {}
-            team = c.get("team") or {}
+            c = _as_dict(competitors[1])
+            team = _as_dict(c.get("team"))
             home = {"abbrev": _norm_abbrev(team.get("abbreviation") or team.get("displayName")), "score": _to_int(c.get("score"), 0)}
         if away is None or home is None:
             continue
@@ -1635,9 +1689,9 @@ def _merge_games_by_id(primary: list[dict[str, Any]], secondary: list[dict[str, 
         m = dict(g)
         for k, v in s.items():
             if k in {"awayTeam", "homeTeam"}:
-                base_team = m.get(k) if isinstance(m.get(k), dict) else {}
-                sec_team = v if isinstance(v, dict) else {}
-                team_merged = dict(base_team)
+                base_team = _as_dict(m.get(k))
+                sec_team = _as_dict(v)
+                team_merged: dict[str, Any] = dict(base_team)
                 for tk, tv in sec_team.items():
                     if tk in {"abbrev", "abbreviation", "teamAbbrev"}:
                         cur_code = str(team_merged.get(tk) or "").strip().upper()
@@ -1660,6 +1714,25 @@ def _merge_games_by_id(primary: list[dict[str, Any]], secondary: list[dict[str, 
                 m[k] = v
         out.append(m)
     return out
+
+
+def _preserve_cached_game_rows(
+    current_games: list[dict[str, Any]],
+    cached_games: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """
+    Cache-only startup renders can temporarily load only one league (for example,
+    PWHL) even when `games.xml` already has same-day NHL rows. Preserve existing
+    XML rows in that case so we do not overwrite the day with a partial slate.
+    Freshly fetched rows still win because they are placed first.
+    """
+    current = [g for g in current_games if isinstance(g, dict)]
+    cached = [g for g in cached_games if isinstance(g, dict)]
+    if not current:
+        return cached
+    if not cached:
+        return current
+    return _dedupe_games(current + cached)
 
 
 def _choose_cols(n: int, w: int, h: int) -> int:
@@ -1714,14 +1787,21 @@ def _group_bucket_for_game(g: dict[str, Any], selected_date: dt.date) -> str:
     return league
 
 
-def _game_sort_key(g: dict[str, Any], tz: ZoneInfo) -> tuple[int, dt.datetime, str, str]:
-    # 1) by scheduled start (unknown start goes last), 2) by teams for stable ordering.
+def _game_sort_key(
+    g: dict[str, Any],
+    tz: ZoneInfo,
+    selected_date: dt.date,
+) -> tuple[int, dt.datetime, int, str, str]:
+    # 1) by scheduled start (unknown start goes last), 2) by game id, 3) by teams.
     st = _parse_start_local(g, tz)
+    if not isinstance(st, dt.datetime):
+        st = _parse_status_time_local(g, tz, selected_date)
     has_start = 0 if isinstance(st, dt.datetime) else 1
     if not isinstance(st, dt.datetime):
         st = dt.datetime.max.replace(tzinfo=tz)
     a, h = _game_codes(g)
-    return (has_start, st, a, h)
+    gid = _to_int(g.get("id") or g.get("gameId") or 0, default=0)
+    return (has_start, st, gid, a, h)
 
 
 def _group_by_league(
@@ -1736,7 +1816,7 @@ def _group_by_league(
         by[league].append(g)
     out: list[tuple[str, list[dict[str, Any]]]] = []
     for league in sorted(by.keys(), key=_league_order_key):
-        items = sorted(by[league], key=lambda gg: _game_sort_key(gg, tz))
+        items = sorted(by[league], key=lambda gg: _game_sort_key(gg, tz, selected_date))
         out.append((league, items))
     return out
 
@@ -2302,6 +2382,35 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             return start_local.date()
         return None
 
+    def _split_games_for_selected_date(
+        games_in: list[dict[str, Any]],
+        selected_date: dt.date,
+    ) -> tuple[list[dict[str, Any]], dict[dt.date, list[dict[str, Any]]]]:
+        same_day: list[dict[str, Any]] = []
+        spillover: dict[dt.date, list[dict[str, Any]]] = defaultdict(list)
+        for gg in games_in:
+            if not isinstance(gg, dict):
+                continue
+            game_day = _game_date(gg)
+            if game_day is None or game_day == selected_date:
+                same_day.append(gg)
+            else:
+                spillover[game_day].append(gg)
+        return same_day, spillover
+
+    def _write_spillover_games_to_xml(spillover: dict[dt.date, list[dict[str, Any]]]) -> None:
+        if not season:
+            return
+        for spill_day, spill_games in spillover.items():
+            if not spill_games:
+                continue
+            try:
+                existing = read_games_day_xml(season=season, day=spill_day)
+                merged = _dedupe_games([g for g in spill_games if isinstance(g, dict)] + [g for g in existing if isinstance(g, dict)])
+                write_games_day_xml(season=season, day=spill_day, games=merged)
+            except Exception:
+                continue
+
     def _read_season_series_rows() -> list[dict[str, Any]]:
         nonlocal season_series_rows_cache
         if season_series_rows_cache is not None:
@@ -2362,24 +2471,24 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
     ) -> dict[str, Any]:
         a = str(code_a or "").upper()
         b = str(code_b or "").upper()
-        key = tuple(sorted((a, b)))
+        key: tuple[str, str] = (a, b) if a <= b else (b, a)
         cached = season_series_matchup_cache.get(key)
         if cached is None:
             rows_all = _read_season_series_rows()
-            rows = [
+            matchup_rows: list[dict[str, Any]] = [
                 row
                 for row in rows_all
                 if str(row.get("league") or "") == "NHL"
                 and {str(row.get("away_code") or ""), str(row.get("home_code") or "")} == {a, b}
             ]
-            if not rows:
+            if not matchup_rows:
                 cached = {"headline": "[NF]", "rows": []}
                 season_series_matchup_cache[key] = cached
             else:
                 wins: dict[str, int] = {a: 0, b: 0}
                 played: list[dict[str, Any]] = []
                 upcoming: list[dict[str, Any]] = []
-                for row in rows:
+                for row in matchup_rows:
                     state_u = str(row.get("state") or "").upper()
                     if _is_final_state_text(state_u):
                         played.append(row)
@@ -2441,7 +2550,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             live_line = f"{live_line} {day_txt}"
         rows_cached = [
             str(x).strip()
-            for x in (cached.get("rows") if isinstance(cached.get("rows"), list) else [])
+            for x in _as_list(cached.get("rows"))
             if str(x).strip()
         ]
         rows_out = list(rows_cached)
@@ -2457,15 +2566,15 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             rows_out[replaced_idx] = live_line
         elif live_line not in rows_out:
             rows_out.append(live_line)
-        rows: list[str] = []
+        clean_rows: list[str] = []
         seen_rows: set[str] = set()
         for line in rows_out:
             txt = str(line).strip()
             if not txt or txt in seen_rows:
                 continue
             seen_rows.add(txt)
-            rows.append(txt)
-        return {"headline": str(cached.get("headline") or "[NF]"), "rows": rows}
+            clean_rows.append(txt)
+        return {"headline": str(cached.get("headline") or "[NF]"), "rows": clean_rows}
 
     def _build_espn_summary_index() -> None:
         nonlocal espn_summary_index_built
@@ -2490,8 +2599,8 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             boxscore = data.get("boxscore")
             if not isinstance(header, dict) or not isinstance(boxscore, dict):
                 continue
-            comp = (((header.get("competitions") or [{}])[0]) or {})
-            if not isinstance(comp, dict):
+            comp = _first_dict(header.get("competitions"))
+            if not comp:
                 continue
             date_raw = str(comp.get("date") or "").strip()
             if not date_raw:
@@ -2502,10 +2611,10 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                 continue
             away_code = ""
             home_code = ""
-            for c in comp.get("competitors") or []:
+            for c in _as_list(comp.get("competitors")):
                 if not isinstance(c, dict):
                     continue
-                team = c.get("team") if isinstance(c.get("team"), dict) else {}
+                team = _as_dict(c.get("team"))
                 code = _norm_abbrev(team.get("abbreviation") or team.get("shortDisplayName") or team.get("displayName"), fallback="")
                 if not code:
                     continue
@@ -2646,9 +2755,9 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
     def _boxscore_has_confirmed_goalie(boxscore: Optional[dict[str, Any]], team_key: str) -> bool:
         if not isinstance(boxscore, dict):
             return False
-        pstats = boxscore.get("playerByGameStats") if isinstance(boxscore.get("playerByGameStats"), dict) else {}
-        team_blob = pstats.get(str(team_key)) if isinstance(pstats.get(str(team_key)), dict) else {}
-        rows = team_blob.get("goalies") if isinstance(team_blob.get("goalies"), list) else []
+        pstats = _as_dict(boxscore.get("playerByGameStats"))
+        team_blob = _as_dict(pstats.get(str(team_key)))
+        rows = _as_list(team_blob.get("goalies"))
         for row in rows:
             if not isinstance(row, dict):
                 continue
@@ -2767,13 +2876,13 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
     def _game_elapsed_seconds(game: dict[str, Any]) -> Optional[float]:
         period = _to_int(
             game.get("period")
-            or ((game.get("periodDescriptor") or {}).get("number") if isinstance(game.get("periodDescriptor"), dict) else 0)
+            or _as_dict(game.get("periodDescriptor")).get("number")
             or 0,
             default=0,
         )
         if period <= 0:
             return None
-        clock = game.get("clock") if isinstance(game.get("clock"), dict) else {}
+        clock = _as_dict(game.get("clock"))
         rem_txt = str(clock.get("timeRemaining") or clock.get("time") or "").strip()
         mmss = _parse_mmss(rem_txt)
         if mmss is None:
@@ -2785,8 +2894,8 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
 
     def _play_elapsed_seconds(play: dict[str, Any], *, game: dict[str, Any]) -> Optional[float]:
         period = _to_int(
-            ((play.get("periodDescriptor") or {}).get("number") if isinstance(play.get("periodDescriptor"), dict) else None)
-            or ((play.get("period") or {}).get("number") if isinstance(play.get("period"), dict) else None)
+            _as_dict(play.get("periodDescriptor")).get("number")
+            or _as_dict(play.get("period")).get("number")
             or 0,
             default=0,
         )
@@ -2815,7 +2924,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
         away_id: int,
         home_id: int,
     ) -> dict[str, Any]:
-        plays = pbp.get("plays") if isinstance(pbp.get("plays"), list) else []
+        plays = _as_list(pbp.get("plays"))
         if not plays:
             return {
                 "state_line": "",
@@ -2872,7 +2981,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             type_u = str(play.get("typeDescKey") or play.get("typeCode") or "").strip().lower()
 
             if type_u == "penalty" and team_code in taken:
-                details = play.get("details") if isinstance(play.get("details"), dict) else {}
+                details = _as_dict(play.get("details"))
                 duration_min = _to_int(details.get("duration") or details.get("durationMinutes") or 0, default=0)
                 type_code = str(details.get("typeCode") or "").upper().strip()
                 if duration_min > 0:
@@ -3000,7 +3109,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
 
     def _player_name_map(pbp: dict[str, Any]) -> dict[int, str]:
         out: dict[int, str] = {}
-        for row in pbp.get("rosterSpots") or []:
+        for row in _as_list(pbp.get("rosterSpots")):
             if not isinstance(row, dict):
                 continue
             pid = _to_int(row.get("playerId") or 0, default=0)
@@ -3021,14 +3130,14 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
         away_id: int,
         home_id: int,
     ) -> str:
-        details = play.get("details") if isinstance(play.get("details"), dict) else {}
+        details = _as_dict(play.get("details"))
         owner_id = _to_int(details.get("eventOwnerTeamId") or 0, default=0)
         if owner_id > 0:
             if away_id > 0 and owner_id == away_id:
                 return away_code
             if home_id > 0 and owner_id == home_id:
                 return home_code
-        team = play.get("team") if isinstance(play.get("team"), dict) else {}
+        team = _as_dict(play.get("team"))
         code = _norm_abbrev(
             team.get("abbrev")
             or team.get("abbreviation")
@@ -3048,19 +3157,19 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
         home_code: str,
     ) -> dict[str, Any]:
         away_id = _to_int(
-            ((game.get("awayTeam") or {}).get("id") if isinstance(game.get("awayTeam"), dict) else None)
-            or ((pbp.get("awayTeam") or {}).get("id") if isinstance(pbp.get("awayTeam"), dict) else None)
+            _as_dict(game.get("awayTeam")).get("id")
+            or _as_dict(pbp.get("awayTeam")).get("id")
             or 0,
             default=0,
         )
         home_id = _to_int(
-            ((game.get("homeTeam") or {}).get("id") if isinstance(game.get("homeTeam"), dict) else None)
-            or ((pbp.get("homeTeam") or {}).get("id") if isinstance(pbp.get("homeTeam"), dict) else None)
+            _as_dict(game.get("homeTeam")).get("id")
+            or _as_dict(pbp.get("homeTeam")).get("id")
             or 0,
             default=0,
         )
         names_by_id = _player_name_map(pbp)
-        plays = pbp.get("plays") if isinstance(pbp.get("plays"), list) else []
+        plays = _as_list(pbp.get("plays"))
 
         shot_by_period: dict[int, dict[str, int]] = {}
         stats: dict[str, dict[str, int]] = {
@@ -3094,9 +3203,11 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                 continue
             seen_types.add(type_u)
 
+            period_desc = _as_dict(play.get("periodDescriptor"))
+            period_blob = _as_dict(play.get("period"))
             period = _to_int(
-                ((play.get("periodDescriptor") or {}).get("number") if isinstance(play.get("periodDescriptor"), dict) else None)
-                or ((play.get("period") or {}).get("number") if isinstance(play.get("period"), dict) else None)
+                period_desc.get("number")
+                or period_blob.get("number")
                 or 0,
                 default=0,
             )
@@ -3126,7 +3237,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             elif type_u == "takeaway":
                 stats[team_code]["takeaways"] += 1
             elif type_u == "penalty":
-                details = play.get("details") if isinstance(play.get("details"), dict) else {}
+                details = _as_dict(play.get("details"))
                 duration = _to_int(details.get("duration") or details.get("durationMinutes") or 0, default=0)
                 if duration > 0:
                     stats[team_code]["pim"] += duration
@@ -3178,15 +3289,15 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
         away_code: str,
         home_code: str,
     ) -> dict[str, tuple[str, str]]:
-        boxscore = summary.get("boxscore") if isinstance(summary.get("boxscore"), dict) else {}
-        teams = boxscore.get("teams") if isinstance(boxscore.get("teams"), list) else []
+        boxscore = _as_dict(summary.get("boxscore"))
+        teams = _as_list(boxscore.get("teams"))
         away_stats: dict[str, str] = {}
         home_stats: dict[str, str] = {}
         for row in teams:
             if not isinstance(row, dict):
                 continue
             side = str(row.get("homeAway") or "").strip().lower()
-            stats_list = row.get("statistics") if isinstance(row.get("statistics"), list) else []
+            stats_list = _as_list(row.get("statistics"))
             target = away_stats if side == "away" else home_stats if side == "home" else None
             if target is None:
                 continue
@@ -3224,7 +3335,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
         away_code: str,
         home_code: str,
     ) -> list[dict[str, Any]]:
-        plays = summary.get("plays") if isinstance(summary.get("plays"), list) else []
+        plays = _as_list(summary.get("plays"))
         out: list[dict[str, Any]] = []
         for play in plays:
             if not isinstance(play, dict):
@@ -3232,13 +3343,10 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             txt = str(play.get("text") or "").strip()
             if "penalty" not in txt.lower():
                 continue
-            period = _to_int(
-                ((play.get("period") or {}).get("number") if isinstance(play.get("period"), dict) else None) or 0,
-                default=0,
-            )
-            clock = play.get("clock") if isinstance(play.get("clock"), dict) else {}
+            period = _to_int(_as_dict(play.get("period")).get("number") or 0, default=0)
+            clock = _as_dict(play.get("clock"))
             clock_txt = str(clock.get("displayValue") or clock.get("value") or "").strip() or "[NF]"
-            team = play.get("team") if isinstance(play.get("team"), dict) else {}
+            team = _as_dict(play.get("team"))
             code = _norm_abbrev(
                 team.get("abbreviation") or team.get("shortDisplayName") or team.get("displayName"),
                 fallback="",
@@ -4957,11 +5065,11 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                 if isinstance(pbp, dict)
                 else {"shot_by_period": {}, "stats": {}, "seen_types": set(), "penalties": [], "has_plays": False}
             )
-            shot_by_period = pbp_pack.get("shot_by_period") if isinstance(pbp_pack.get("shot_by_period"), dict) else {}
-            pbp_stats = pbp_pack.get("stats") if isinstance(pbp_pack.get("stats"), dict) else {}
-            seen_types = pbp_pack.get("seen_types") if isinstance(pbp_pack.get("seen_types"), set) else set()
-            penalties_rows = pbp_pack.get("penalties") if isinstance(pbp_pack.get("penalties"), list) else []
-            special_pack = pbp_pack.get("special_teams") if isinstance(pbp_pack.get("special_teams"), dict) else {}
+            shot_by_period: dict[int, dict[str, int]] = cast(dict[int, dict[str, int]], pbp_pack.get("shot_by_period")) if isinstance(pbp_pack.get("shot_by_period"), dict) else {}
+            pbp_stats: dict[str, dict[str, int]] = cast(dict[str, dict[str, int]], pbp_pack.get("stats")) if isinstance(pbp_pack.get("stats"), dict) else {}
+            seen_types: set[str] = _as_str_set(pbp_pack.get("seen_types"))
+            penalties_rows: list[dict[str, Any]] = [r for r in _as_list(pbp_pack.get("penalties")) if isinstance(r, dict)]
+            special_pack = _as_dict(pbp_pack.get("special_teams"))
             has_pbp_plays = bool(pbp_pack.get("has_plays"))
 
             if (away_shots is None or home_shots is None) and shot_by_period:
@@ -4976,7 +5084,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                 if home_shots is None:
                     home_shots = home_total_calc
 
-            espn_stat_pack = (
+            espn_stat_pack: dict[str, tuple[str, str]] = (
                 _espn_team_stat_values(espn_summary, away_code=away_code, home_code=home_code)
                 if isinstance(espn_summary, dict)
                 else {}
@@ -4986,9 +5094,9 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             if not penalties_rows and mp_penalties_rows:
                 penalties_rows = mp_penalties_rows
 
-            tv_rows = game.get("tvBroadcasts") if isinstance(game.get("tvBroadcasts"), list) else []
+            tv_rows = _as_list(game.get("tvBroadcasts"))
             if not tv_rows and isinstance(boxscore, dict):
-                tv_rows = boxscore.get("tvBroadcasts") if isinstance(boxscore.get("tvBroadcasts"), list) else []
+                tv_rows = _as_list(boxscore.get("tvBroadcasts"))
             networks: list[str] = []
             for row in tv_rows:
                 if not isinstance(row, dict):
@@ -4997,10 +5105,10 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                 if network and network not in networks:
                     networks.append(network)
             if not networks and isinstance(espn_summary, dict):
-                for row in espn_summary.get("broadcasts") or []:
+                for row in _as_list(espn_summary.get("broadcasts")):
                     if not isinstance(row, dict):
                         continue
-                    names = row.get("names") if isinstance(row.get("names"), list) else []
+                    names = _as_list(row.get("names"))
                     for n in names:
                         nn = str(n).strip()
                         if nn and nn not in networks:
@@ -5012,10 +5120,10 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                 venue_name = venue_name or _pick_text(boxscore.get("venue"))
                 venue_city = venue_city or _pick_text(boxscore.get("venueLocation"))
             if isinstance(espn_summary, dict):
-                info = espn_summary.get("gameInfo") if isinstance(espn_summary.get("gameInfo"), dict) else {}
-                venue = info.get("venue") if isinstance(info.get("venue"), dict) else {}
+                info = _as_dict(espn_summary.get("gameInfo"))
+                venue = _as_dict(info.get("venue"))
                 venue_name = venue_name or str(venue.get("fullName") or "").strip()
-                address = venue.get("address") if isinstance(venue.get("address"), dict) else {}
+                address = _as_dict(venue.get("address"))
                 if not venue_city:
                     city = str(address.get("city") or "").strip()
                     state_txt = str(address.get("state") or address.get("stateAbbreviation") or "").strip()
@@ -5079,7 +5187,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                     names = _extract_names(rows if isinstance(rows, list) else [])
                     if names:
                         return ", ".join(names)
-                injuries = blob.get("injuries") if isinstance(blob.get("injuries"), list) else []
+                injuries = _as_list(blob.get("injuries"))
                 picked: list[str] = []
                 seen: set[str] = set()
                 for row in injuries:
@@ -5103,8 +5211,8 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             officials_txt = "[NF]"
             off_parts: list[str] = []
             if isinstance(espn_summary, dict):
-                info = espn_summary.get("gameInfo") if isinstance(espn_summary.get("gameInfo"), dict) else {}
-                offs = info.get("officials") if isinstance(info.get("officials"), list) else []
+                info = _as_dict(espn_summary.get("gameInfo"))
+                offs = _as_list(info.get("officials"))
                 for row in offs:
                     if not isinstance(row, dict):
                         continue
@@ -5117,10 +5225,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                         off_parts.append(name)
             if not off_parts and isinstance(boxscore, dict):
                 for key in ("officials", "referees", "linespersons"):
-                    rows = boxscore.get(key)
-                    if not isinstance(rows, list):
-                        continue
-                    for row in rows:
+                    for row in _as_list(boxscore.get(key)):
                         if not isinstance(row, dict):
                             continue
                         names = _extract_names([row])
@@ -5130,8 +5235,8 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                             off_parts.append(f"{name} - {pos}")
                         elif name:
                             off_parts.append(name)
-                game_info = boxscore.get("gameInfo") if isinstance(boxscore.get("gameInfo"), dict) else {}
-                rows = game_info.get("officials") if isinstance(game_info.get("officials"), list) else []
+                game_info = _as_dict(boxscore.get("gameInfo"))
+                rows = _as_list(game_info.get("officials"))
                 for row in rows:
                     if not isinstance(row, dict):
                         continue
@@ -5159,35 +5264,36 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             away_sources: list[dict[str, Any]] = []
             home_sources: list[dict[str, Any]] = []
             if isinstance(boxscore, dict):
-                away_team_blob = boxscore.get("awayTeam") if isinstance(boxscore.get("awayTeam"), dict) else {}
-                home_team_blob = boxscore.get("homeTeam") if isinstance(boxscore.get("homeTeam"), dict) else {}
+                away_team_blob = _as_dict(boxscore.get("awayTeam"))
+                home_team_blob = _as_dict(boxscore.get("homeTeam"))
                 if away_team_blob:
                     away_sources.append(away_team_blob)
                 if home_team_blob:
                     home_sources.append(home_team_blob)
-                pstats = boxscore.get("playerByGameStats") if isinstance(boxscore.get("playerByGameStats"), dict) else {}
-                away_p = pstats.get("awayTeam") if isinstance(pstats.get("awayTeam"), dict) else {}
-                home_p = pstats.get("homeTeam") if isinstance(pstats.get("homeTeam"), dict) else {}
+                pstats = _as_dict(boxscore.get("playerByGameStats"))
+                away_p = _as_dict(pstats.get("awayTeam"))
+                home_p = _as_dict(pstats.get("homeTeam"))
                 if away_p:
                     away_sources.append(away_p)
                 if home_p:
                     home_sources.append(home_p)
-                game_info = boxscore.get("gameInfo") if isinstance(boxscore.get("gameInfo"), dict) else {}
-                away_gi = game_info.get("awayTeam") if isinstance(game_info.get("awayTeam"), dict) else {}
-                home_gi = game_info.get("homeTeam") if isinstance(game_info.get("homeTeam"), dict) else {}
+                game_info = _as_dict(boxscore.get("gameInfo"))
+                away_gi = _as_dict(game_info.get("awayTeam"))
+                home_gi = _as_dict(game_info.get("homeTeam"))
                 if away_gi:
                     away_sources.append(away_gi)
                 if home_gi:
                     home_sources.append(home_gi)
 
             if isinstance(espn_summary, dict):
-                comp = (((espn_summary.get("header") or {}).get("competitions") or [{}])[0] or {})
-                competitors = comp.get("competitors") if isinstance(comp.get("competitors"), list) else []
+                header = _as_dict(espn_summary.get("header"))
+                comp = _first_dict(header.get("competitions"))
+                competitors = _as_list(comp.get("competitors"))
                 for row in competitors:
                     if not isinstance(row, dict):
                         continue
                     side = str(row.get("homeAway") or "").strip().lower()
-                    team_blob = row.get("team") if isinstance(row.get("team"), dict) else {}
+                    team_blob = _as_dict(row.get("team"))
                     if side == "away":
                         away_sources.append(row)
                         if team_blob:
@@ -5220,7 +5326,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
 
             current_period = _to_int(
                 game.get("period")
-                or ((game.get("periodDescriptor") or {}).get("number") if isinstance(game.get("periodDescriptor"), dict) else 0)
+                or _as_dict(game.get("periodDescriptor")).get("number")
                 or 0,
                 default=0,
             )
@@ -5231,9 +5337,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                 extra_periods = [p for p in sorted(shot_by_period.keys()) if p > 3]
                 period_order = [1, 2, 3] + extra_periods
 
-                def _shot_slot_text(bucket: dict[str, Any], team: str) -> str:
-                    if not isinstance(bucket, dict):
-                        return "--"
+                def _shot_slot_text(bucket: dict[str, int], team: str) -> str:
                     raw_val = bucket.get(team)
                     if raw_val in (None, ""):
                         return "--"
@@ -5241,7 +5345,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                     return str(val) if val >= 0 else "--"
 
                 for pnum in period_order:
-                    bucket = shot_by_period.get(pnum) if isinstance(shot_by_period.get(pnum), dict) else {}
+                    bucket = shot_by_period.get(pnum, {})
                     if (not is_final) and current_period > 0 and pnum > current_period:
                         av = "--"
                         hv = "--"
@@ -5258,15 +5362,15 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             period_rows.append(("TOTAL", total_away_txt, total_home_txt))
 
             def _from_pbp_stat(key: str) -> tuple[str, str]:
-                away_row = pbp_stats.get(away_code) if isinstance(pbp_stats.get(away_code), dict) else {}
-                home_row = pbp_stats.get(home_code) if isinstance(pbp_stats.get(home_code), dict) else {}
+                away_row = pbp_stats.get(away_code, {})
+                home_row = pbp_stats.get(home_code, {})
                 if key not in away_row or key not in home_row:
                     return ("[NF]", "[NF]")
                 return (str(_to_int(away_row.get(key) or 0, default=0)), str(_to_int(home_row.get(key) or 0, default=0)))
 
             if "faceoff" in seen_types:
-                away_face = _to_int(((pbp_stats.get(away_code) or {}).get("faceoff_wins") if isinstance(pbp_stats.get(away_code), dict) else 0) or 0, default=0)
-                home_face = _to_int(((pbp_stats.get(home_code) or {}).get("faceoff_wins") if isinstance(pbp_stats.get(home_code), dict) else 0) or 0, default=0)
+                away_face = _to_int(pbp_stats.get(away_code, {}).get("faceoff_wins") or 0, default=0)
+                home_face = _to_int(pbp_stats.get(home_code, {}).get("faceoff_wins") or 0, default=0)
                 face_total = away_face + home_face
                 if face_total > 0:
                     away_face_txt = f"{(100.0 * away_face / face_total):.1f}%".replace(".0%", "%")
@@ -5318,7 +5422,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             series_headline = str(season_series.get("headline") or "[NF]").strip() or "[NF]"
             series_rows = [
                 str(x).strip()
-                for x in (season_series.get("rows") if isinstance(season_series.get("rows"), list) else [])
+                for x in _as_list(season_series.get("rows"))
                 if str(x).strip()
             ]
 
@@ -5430,7 +5534,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                 )
                 if not isinstance(landing, dict):
                     return season_line, last5_line
-                season_rows = landing.get("seasonTotals") if isinstance(landing.get("seasonTotals"), list) else []
+                season_rows = _as_list(landing.get("seasonTotals"))
                 season_rows_nhl = [
                     r
                     for r in season_rows
@@ -5460,7 +5564,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                         default=0,
                     )
                     season_line = f"Season SV% {_fmt_sv_pct(sv)} | {wins}-{losses}-{otl}"
-                last5_rows = landing.get("last5Games") if isinstance(landing.get("last5Games"), list) else []
+                last5_rows = _as_list(landing.get("last5Games"))
                 vals: list[float] = []
                 for rr in last5_rows[:5]:
                     if not isinstance(rr, dict):
@@ -5468,6 +5572,8 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                     vv = rr.get("savePctg")
                     if vv is None:
                         vv = rr.get("savePercentage")
+                    if vv is None:
+                        continue
                     try:
                         vals.append(float(vv))
                     except Exception:
@@ -5479,9 +5585,9 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             def _team_goalie_slots(team_code: str, box_key: str) -> list[str]:
                 rows_box: list[dict[str, Any]] = []
                 if isinstance(boxscore, dict):
-                    pstats = boxscore.get("playerByGameStats") if isinstance(boxscore.get("playerByGameStats"), dict) else {}
-                    blob = pstats.get(box_key) if isinstance(pstats.get(box_key), dict) else {}
-                    g_rows = blob.get("goalies") if isinstance(blob.get("goalies"), list) else []
+                    pstats = _as_dict(boxscore.get("playerByGameStats"))
+                    blob = _as_dict(pstats.get(box_key))
+                    g_rows = _as_list(blob.get("goalies"))
                     rows_box = [r for r in g_rows if isinstance(r, dict)]
 
                 candidates: list[dict[str, Any]] = []
@@ -5759,7 +5865,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                 canvas_target.yview_scroll(delta, "units")
                 return "break"
 
-            def _bind_popup_scroll_recursive(widget: tk.Widget, canvas_target: tk.Canvas) -> None:
+            def _bind_popup_scroll_recursive(widget: Any, canvas_target: tk.Canvas) -> None:
                 for seq in ("<MouseWheel>", "<Button-4>", "<Button-5>"):
                     widget.bind(seq, lambda e, cv=canvas_target: _on_popup_wheel_for(cv, e), add="+")
                 for child in widget.winfo_children():
@@ -5816,13 +5922,12 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             def _player_table_rows(box_key: str) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
                 if not isinstance(boxscore, dict):
                     return [], []
-                pstats = boxscore.get("playerByGameStats") if isinstance(boxscore.get("playerByGameStats"), dict) else {}
-                blob = pstats.get(box_key) if isinstance(pstats.get(box_key), dict) else {}
+                pstats = _as_dict(boxscore.get("playerByGameStats"))
+                blob = _as_dict(pstats.get(box_key))
                 seen_ids: set[int] = set()
                 skaters: list[dict[str, Any]] = []
                 for grp in ("forwards", "defense", "defencemen", "skaters"):
-                    rows = blob.get(grp) if isinstance(blob.get(grp), list) else []
-                    for row in rows:
+                    for row in _as_list(blob.get(grp)):
                         if not isinstance(row, dict):
                             continue
                         pid = _to_int(row.get("playerId") or 0, default=0)
@@ -5831,7 +5936,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                         if pid > 0:
                             seen_ids.add(pid)
                         skaters.append(row)
-                goalies = [r for r in (blob.get("goalies") if isinstance(blob.get("goalies"), list) else []) if isinstance(r, dict)]
+                goalies = [r for r in _as_list(blob.get("goalies")) if isinstance(r, dict)]
                 return skaters, goalies
 
             def _render_roster_view(team_code: str, box_key: str) -> None:
@@ -6480,6 +6585,193 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
         out["games"] = merged_games
         return out
 
+    def _nhl_game_ids(rows: list[dict[str, Any]]) -> set[int]:
+        out: set[int] = set()
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            league_txt = str(row.get("league") or "").upper().strip()
+            gid = _to_int(row.get("id") or row.get("gameId") or 0, default=0)
+            if gid <= 0:
+                continue
+            if league_txt == "NHL" or str(gid).startswith(("2024", "2025", "2026")):
+                out.add(gid)
+        return out
+
+    def _write_nhl_games_xml_day(day: dt.date, nhl_rows: list[dict[str, Any]]) -> int:
+        if not season or not nhl_rows:
+            return 0
+        existing = read_games_day_xml(season=season, day=day)
+        before = _nhl_game_ids([g for g in existing if isinstance(g, dict)])
+        prepared: list[dict[str, Any]] = []
+        for row in nhl_rows:
+            if not isinstance(row, dict):
+                continue
+            cur = dict(row)
+            cur["league"] = "NHL"
+            if not str(cur.get("_fetched_at") or "").strip():
+                cur["_fetched_at"] = f"Updated: {_fmt_updated_ts()}"
+            prepared.append(cur)
+        merged = _dedupe_games(prepared + [g for g in existing if isinstance(g, dict)])
+        try:
+            write_games_day_xml(season=season, day=day, games=merged)
+        except Exception:
+            return 0
+        after = _nhl_game_ids(merged)
+        return len(after - before)
+
+    def _score_nhl_games_for_day(
+        day: dt.date,
+        *,
+        allow_network: bool,
+        force_network: bool,
+    ) -> list[dict[str, Any]]:
+        try:
+            raw, _err, stamp = _get_score_payload(
+                day,
+                prefer_cached=not force_network,
+                allow_network=allow_network,
+                force_network=force_network,
+            )
+            raw = _apply_schedule_start_overrides(
+                day,
+                raw,
+                allow_network=allow_network,
+                force_network=force_network,
+            )
+        except Exception:
+            return []
+        out: list[dict[str, Any]] = []
+        for row in list(raw.get("games") or []):
+            if not isinstance(row, dict) or _is_olympic_game(row):
+                continue
+            cur = dict(row)
+            cur["league"] = "NHL"
+            cur["_fetched_at"] = stamp
+            out.append(cur)
+        return out
+
+    def _nhl_rows_by_id(rows: list[dict[str, Any]]) -> dict[int, dict[str, Any]]:
+        out: dict[int, dict[str, Any]] = {}
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            gid = _to_int(row.get("id") or row.get("gameId") or 0, default=0)
+            if gid > 0:
+                out[gid] = row
+        return out
+
+    def _nhl_row_signature(row: dict[str, Any]) -> tuple[str, str, str, int, int, str]:
+        away_code, home_code = _game_codes(row)
+        away = _as_dict(row.get("awayTeam"))
+        home = _as_dict(row.get("homeTeam"))
+        return (
+            _game_state(row),
+            away_code,
+            home_code,
+            _to_int(away.get("score") or 0, default=0),
+            _to_int(home.get("score") or 0, default=0),
+            str(row.get("startTimeUTC") or row.get("startTime") or "").strip(),
+        )
+
+    def _nhl_day_needs_reconcile(
+        *,
+        expected_rows: list[dict[str, Any]],
+        cached_rows: list[dict[str, Any]],
+        target_rows: list[dict[str, Any]],
+    ) -> bool:
+        cached_nhl = [
+            row
+            for row in cached_rows
+            if isinstance(row, dict) and str(row.get("league") or "").upper() == "NHL"
+        ]
+        cached_ids = _nhl_game_ids(cached_nhl)
+        target_ids = _nhl_game_ids(target_rows)
+        expected_ids = _nhl_game_ids([{**row, "league": "NHL"} for row in expected_rows if isinstance(row, dict)])
+        desired_ids = target_ids or expected_ids
+        if not desired_ids:
+            return False
+        if cached_ids != desired_ids:
+            return True
+
+        target_by_id = _nhl_rows_by_id(target_rows)
+        cached_by_id = _nhl_rows_by_id(cached_nhl)
+        for gid in sorted(desired_ids):
+            cached_row = cached_by_id.get(gid)
+            target_row = target_by_id.get(gid)
+            if cached_row is None:
+                return True
+            if target_row is None:
+                continue
+            if _nhl_row_signature(cached_row) != _nhl_row_signature(target_row):
+                return True
+        return False
+
+    def _backfill_missing_scheduled_games(
+        *,
+        center_date: dt.date,
+        allow_network: bool,
+        force_network: bool,
+    ) -> tuple[int, int]:
+        if not season:
+            return 0, 0
+        scan_start = max(dmin, min(center_date, today) - dt.timedelta(days=14))
+        scan_end = min(dmax, max(center_date, today) + dt.timedelta(days=70))
+        if scan_start > scan_end:
+            return 0, 0
+
+        scheduled_by_day: dict[dt.date, list[dict[str, Any]]] = defaultdict(list)
+        probe = scan_start
+        seen_probe_keys: set[str] = set()
+        while probe <= scan_end:
+            key = probe.isoformat()
+            if key not in seen_probe_keys:
+                seen_probe_keys.add(key)
+                payload = _load_schedule_payload_for_date(
+                    probe,
+                    allow_network=allow_network,
+                    force_network=force_network,
+                )
+                if isinstance(payload, dict):
+                    for row in _extract_schedule_games(payload):
+                        if not isinstance(row, dict) or _is_olympic_game(row):
+                            continue
+                        day = _game_date(row) or probe
+                        if scan_start <= day <= scan_end:
+                            scheduled_by_day[day].append(row)
+            probe += dt.timedelta(days=7)
+
+        checked_days = 0
+        added_games = 0
+        for day in sorted(scheduled_by_day):
+            expected_rows = _dedupe_games([g for g in scheduled_by_day[day] if isinstance(g, dict)])
+            expected_ids = _nhl_game_ids([{**g, "league": "NHL"} for g in expected_rows])
+            if not expected_ids:
+                continue
+            checked_days += 1
+            cached_rows = read_games_day_xml(season=season, day=day)
+
+            score_rows = _score_nhl_games_for_day(
+                day,
+                allow_network=allow_network,
+                force_network=force_network,
+            )
+            candidate_rows = _dedupe_games(score_rows + [dict(g, league="NHL") for g in expected_rows])
+            same_day, spillover = _split_games_for_selected_date(candidate_rows, day)
+            if not _nhl_day_needs_reconcile(
+                expected_rows=expected_rows,
+                cached_rows=cached_rows,
+                target_rows=same_day,
+            ):
+                continue
+            _write_spillover_games_to_xml(spillover)
+            added_games += _write_nhl_games_xml_day(day, same_day)
+            day_payload_cache.pop(day, None)
+            day_payload_stamp.pop(day, None)
+            day_source_plan.pop(day, None)
+            day_external_empty_checked.discard(day)
+        return checked_days, added_games
+
     def _finalized_key(d: dt.date) -> str:
         return f"nhl/day_finalized/{d.isoformat()}"
 
@@ -6518,7 +6810,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
         st = _game_state(g)
         if st not in {"LIVE", "CRIT"}:
             return False
-        clock = g.get("clock") if isinstance(g.get("clock"), dict) else {}
+        clock = _as_dict(g.get("clock"))
         if bool(clock.get("inIntermission")):
             return False
         rem = str(clock.get("timeRemaining") or clock.get("time") or "").strip()
@@ -6771,8 +7063,8 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             team_id_to_code: dict[str, str] = {}
             athlete_to_code: dict[str, str] = {}
             athlete_name_to_code: dict[str, str] = {}
-            header = payload.get("header") if isinstance(payload.get("header"), dict) else {}
-            league = header.get("league") if isinstance(header.get("league"), dict) else {}
+            header = _as_dict(payload.get("header"))
+            league = _as_dict(header.get("league"))
             league_slug = str(league.get("slug") or "").lower()
             league_name = str(league.get("name") or "").lower()
             hint_u = str(league_hint or "").upper()
@@ -6780,69 +7072,65 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
 
             boxscore = payload.get("boxscore")
             if isinstance(boxscore, dict):
-                box_teams = boxscore.get("teams")
-                if isinstance(box_teams, list):
-                    for bt in box_teams:
-                        if not isinstance(bt, dict):
+                for bt in _as_list(boxscore.get("teams")):
+                    if not isinstance(bt, dict):
+                        continue
+                    team = _as_dict(bt.get("team"))
+                    code = _norm_abbrev(
+                        team.get("abbreviation")
+                        or team.get("shortDisplayName")
+                        or team.get("displayName")
+                        or team.get("name"),
+                        fallback="",
+                    ).upper()
+                    if not code:
+                        continue
+                    tid = str(team.get("id") or bt.get("id") or "").strip()
+                    if tid:
+                        team_id_to_code[tid] = code
+                    side = str(bt.get("homeAway") or "").strip().lower()
+                    if side in {"away", "home"}:
+                        side_map[side] = code
+                    shots = _summary_shots_from_stats(bt.get("statistics"))
+                    bucket = out.setdefault(code, {"shotsOnGoal": None, "goalScorers": []})
+                    if bucket.get("shotsOnGoal") is None and shots is not None:
+                        bucket["shotsOnGoal"] = shots
+                for grp in _as_list(boxscore.get("players")):
+                    if not isinstance(grp, dict):
+                        continue
+                    team = _as_dict(grp.get("team"))
+                    code = _norm_abbrev(
+                        team.get("abbreviation")
+                        or team.get("shortDisplayName")
+                        or team.get("displayName")
+                        or team.get("name"),
+                        fallback="",
+                    ).upper()
+                    if not code:
+                        continue
+                    tid = str(team.get("id") or grp.get("id") or "").strip()
+                    if tid:
+                        team_id_to_code[tid] = code
+                    for stat_group in _as_list(grp.get("statistics")):
+                        if not isinstance(stat_group, dict):
                             continue
-                        team = bt.get("team") or {}
-                        code = _norm_abbrev(
-                            team.get("abbreviation")
-                            or team.get("shortDisplayName")
-                            or team.get("displayName")
-                            or team.get("name")
-                        , fallback="").upper()
-                        if not code:
-                            continue
-                        tid = str(team.get("id") or bt.get("id") or "").strip()
-                        if tid:
-                            team_id_to_code[tid] = code
-                        side = str(bt.get("homeAway") or "").strip().lower()
-                        if side in {"away", "home"}:
-                            side_map[side] = code
-                        shots = _summary_shots_from_stats(bt.get("statistics"))
-                        bucket = out.setdefault(code, {"shotsOnGoal": None, "goalScorers": []})
-                        if bucket.get("shotsOnGoal") is None and shots is not None:
-                            bucket["shotsOnGoal"] = shots
-                box_players = boxscore.get("players")
-                if isinstance(box_players, list):
-                    for grp in box_players:
-                        if not isinstance(grp, dict):
-                            continue
-                        team = grp.get("team") or {}
-                        code = _norm_abbrev(
-                            team.get("abbreviation")
-                            or team.get("shortDisplayName")
-                            or team.get("displayName")
-                            or team.get("name")
-                        , fallback="").upper()
-                        if not code:
-                            continue
-                        tid = str(team.get("id") or grp.get("id") or "").strip()
-                        if tid:
-                            team_id_to_code[tid] = code
-                        stat_groups = grp.get("statistics") if isinstance(grp.get("statistics"), list) else []
-                        for stat_group in stat_groups:
-                            if not isinstance(stat_group, dict):
+                        for row in _as_list(stat_group.get("athletes")):
+                            if not isinstance(row, dict):
                                 continue
-                            athletes = stat_group.get("athletes") if isinstance(stat_group.get("athletes"), list) else []
-                            for row in athletes:
-                                if not isinstance(row, dict):
-                                    continue
-                                ath = row.get("athlete") or {}
-                                aid = str(ath.get("id") or "").strip()
-                                anm = str(ath.get("displayName") or ath.get("fullName") or "").strip().lower()
-                                if aid:
-                                    athlete_to_code[aid] = code
-                                if anm:
-                                    athlete_name_to_code[anm] = code
+                            ath = _as_dict(row.get("athlete"))
+                            aid = str(ath.get("id") or "").strip()
+                            anm = str(ath.get("displayName") or ath.get("fullName") or "").strip().lower()
+                            if aid:
+                                athlete_to_code[aid] = code
+                            if anm:
+                                athlete_name_to_code[anm] = code
 
-            comp = (((payload.get("header") or {}).get("competitions") or [{}])[0] or {})
-            competitors = comp.get("competitors") if isinstance(comp.get("competitors"), list) else []
+            comp = _first_dict(header.get("competitions"))
+            competitors = _as_list(comp.get("competitors"))
             for c in competitors:
                 if not isinstance(c, dict):
                     continue
-                team = c.get("team") or {}
+                team = _as_dict(c.get("team"))
                 code = _norm_abbrev(
                     team.get("abbreviation")
                     or team.get("shortDisplayName")
@@ -6861,16 +7149,15 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                 scorers: list[dict[str, Any]] = []
                 # For Olympic summaries, prefer scoring plays (with time) over leader-name lists.
                 if not is_olympics_summary:
-                    leaders = c.get("leaders") if isinstance(c.get("leaders"), list) else []
-                    for ldr in leaders:
+                    for ldr in _as_list(c.get("leaders")):
                         if not isinstance(ldr, dict):
                             continue
                         if str(ldr.get("name") or "").lower() != "goals":
                             continue
-                        for item in ldr.get("leaders") or []:
+                        for item in _as_list(ldr.get("leaders")):
                             if not isinstance(item, dict):
                                 continue
-                            ath = item.get("athlete") or {}
+                            ath = _as_dict(item.get("athlete"))
                             nm = str(ath.get("displayName") or ath.get("fullName") or item.get("displayValue") or "").strip()
                             if nm:
                                 scorers.append({"name": nm})
@@ -6882,7 +7169,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             if side_map:
                 out["__side_map__"] = {"away": side_map.get("away", ""), "home": side_map.get("home", "")}
             comp_desc = str(comp.get("description") or comp.get("shortName") or comp.get("name") or "").strip()
-            header_name = str((payload.get("header") or {}).get("name") or "").strip()
+            header_name = str(header.get("name") or "").strip()
             if comp_desc or header_name:
                 round_src = " | ".join([x for x in (comp_desc, header_name) if x])
                 meta: dict[str, Any] = {}
@@ -6894,9 +7181,9 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                     meta["olympicsDivision"] = div
                 if meta:
                     out["__game_meta__"] = meta
-            comp_status = (((payload.get("header") or {}).get("competitions") or [{}])[0] or {}).get("status")
+            comp_status = comp.get("status")
             if isinstance(comp_status, dict):
-                status_type = comp_status.get("type") if isinstance(comp_status.get("type"), dict) else {}
+                status_type = _as_dict(comp_status.get("type"))
                 state_raw = str((status_type or {}).get("state") or "").lower().strip()
                 completed = bool((status_type or {}).get("completed"))
                 game_state = "FINAL" if completed or state_raw == "post" else ("LIVE" if state_raw in {"in", "inprogress", "live"} else "FUT")
@@ -6904,7 +7191,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                     (status_type or {}).get("shortDetail")
                     or (status_type or {}).get("detail")
                     or (status_type or {}).get("description")
-                    or comp_status.get("type", {}).get("shortDetail", "")
+                    or status_type.get("shortDetail", "")
                 ).strip()
                 period_num = _to_int(comp_status.get("period"), default=-1)
                 pd: dict[str, Any] = {}
@@ -6924,16 +7211,16 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                     "clock": clock_obj,
                 }
 
-            scoring_plays = payload.get("scoringPlays")
-            if not isinstance(scoring_plays, list):
-                scoring_plays = payload.get("plays")
-            if isinstance(scoring_plays, list):
+            scoring_plays = _as_list(payload.get("scoringPlays"))
+            if not scoring_plays:
+                scoring_plays = _as_list(payload.get("plays"))
+            if scoring_plays:
                 for play in scoring_plays:
                     if not isinstance(play, dict):
                         continue
                     if not bool(play.get("scoringPlay")):
                         continue
-                    team = play.get("team") or {}
+                    team = _as_dict(play.get("team"))
                     code = _norm_abbrev(
                         team.get("abbreviation")
                         or team.get("shortDisplayName")
@@ -6946,19 +7233,19 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                             code = team_id_to_code.get(team_id, "")
                     if not code:
                         side = str(play.get("homeAway") or "").strip().lower()
-                        side_ref = out.get("__side_map__") if isinstance(out.get("__side_map__"), dict) else {}
+                        side_ref = _as_dict(out.get("__side_map__"))
                         if side in {"away", "home"}:
-                            code = str((side_ref or {}).get(side) or "").upper()
+                            code = str(side_ref.get(side) or "").upper()
                     scorer_name = ""
                     scorer_id = ""
                     assists: list[str] = []
-                    parts = play.get("participants")
-                    if isinstance(parts, list):
+                    parts = _as_list(play.get("participants"))
+                    if parts:
                         for p in parts:
                             if not isinstance(p, dict):
                                 continue
                             ptype = str(p.get("type") or "").strip().lower()
-                            pat = p.get("athlete") or {}
+                            pat = _as_dict(p.get("athlete"))
                             pid = str(pat.get("id") or "").strip()
                             nm = str(
                                 pat.get("displayName")
@@ -6989,22 +7276,20 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                             goals = []
                             bucket["goalScorers"] = goals
                         goal_time = ""
-                        clk = play.get("clock")
-                        if isinstance(clk, dict):
-                            for k in ("displayValue", "shortDisplayValue", "value", "time"):
-                                v = clk.get(k)
-                                if isinstance(v, str) and v.strip():
-                                    goal_time = v.strip()
-                                    break
+                        clk = _as_dict(play.get("clock"))
+                        for k in ("displayValue", "shortDisplayValue", "value", "time"):
+                            v = clk.get(k)
+                            if isinstance(v, str) and v.strip():
+                                goal_time = v.strip()
+                                break
                         pd: dict[str, Any] = {}
-                        period = play.get("period")
-                        if isinstance(period, dict):
-                            pnum = _to_int(period.get("number"), default=-1)
-                            if pnum > 0:
-                                pd["number"] = pnum
-                            ptype = str(period.get("type") or period.get("abbreviation") or "").upper().strip()
-                            if ptype in {"OT", "SO"}:
-                                pd["periodType"] = ptype
+                        period = _as_dict(play.get("period"))
+                        pnum = _to_int(period.get("number"), default=-1)
+                        if pnum > 0:
+                            pd["number"] = pnum
+                        ptype = str(period.get("type") or period.get("abbreviation") or "").upper().strip()
+                        if ptype in {"OT", "SO"}:
+                            pd["periodType"] = ptype
                         entry: dict[str, Any] = {"name": scorer_name}
                         if pd:
                             entry["periodDescriptor"] = pd
@@ -7012,22 +7297,24 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                             entry["timeRemaining"] = goal_time
                         if assists:
                             entry["assists"] = assists
+                        entry_pd = _as_dict(entry.get("periodDescriptor"))
                         key_now = (
                             str(entry.get("name") or "").strip(),
                             str(entry.get("timeRemaining") or "").strip(),
-                            str((entry.get("periodDescriptor") or {}).get("number") if isinstance(entry.get("periodDescriptor"), dict) else ""),
-                            str((entry.get("periodDescriptor") or {}).get("periodType") if isinstance(entry.get("periodDescriptor"), dict) else ""),
+                            str(entry_pd.get("number") or ""),
+                            str(entry_pd.get("periodType") or ""),
                         )
                         existing = set()
                         for x in goals:
                             if not isinstance(x, dict):
                                 continue
+                            x_pd = _as_dict(x.get("periodDescriptor"))
                             existing.add(
                                 (
                                     str(x.get("name") or "").strip(),
                                     str(x.get("timeRemaining") or "").strip(),
-                                    str((x.get("periodDescriptor") or {}).get("number") if isinstance(x.get("periodDescriptor"), dict) else ""),
-                                    str((x.get("periodDescriptor") or {}).get("periodType") if isinstance(x.get("periodDescriptor"), dict) else ""),
+                                    str(x_pd.get("number") or ""),
+                                    str(x_pd.get("periodType") or ""),
                                 )
                             )
                         if key_now not in existing:
@@ -7209,11 +7496,12 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             def _timed_rows_from_summary_for_game(summary: dict[str, Any], away_code: str, home_code: str) -> dict[str, list[dict[str, Any]]]:
                 out_rows: dict[str, list[dict[str, Any]]] = {away_code: [], home_code: []}
                 team_id_to_code: dict[str, str] = {}
-                comp = (((summary.get("header") or {}).get("competitions") or [{}])[0] or {})
-                for c in (comp.get("competitors") or []):
+                header = _as_dict(summary.get("header"))
+                comp = _first_dict(header.get("competitions"))
+                for c in _as_list(comp.get("competitors")):
                     if not isinstance(c, dict):
                         continue
-                    team = c.get("team") or {}
+                    team = _as_dict(c.get("team"))
                     code = _norm_abbrev(
                         team.get("abbreviation")
                         or team.get("shortDisplayName")
@@ -7223,15 +7511,15 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                     tid = str(team.get("id") or c.get("id") or "").strip()
                     if code and tid:
                         team_id_to_code[tid] = code
-                plays = summary.get("scoringPlays")
-                if not isinstance(plays, list):
-                    plays = summary.get("plays")
-                if not isinstance(plays, list):
+                plays = _as_list(summary.get("scoringPlays"))
+                if not plays:
+                    plays = _as_list(summary.get("plays"))
+                if not plays:
                     return out_rows
                 for play in plays:
                     if not isinstance(play, dict) or not bool(play.get("scoringPlay")):
                         continue
-                    team = play.get("team") or {}
+                    team = _as_dict(play.get("team"))
                     code = _norm_abbrev(
                         team.get("abbreviation")
                         or team.get("shortDisplayName")
@@ -7245,12 +7533,12 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                     if code not in out_rows:
                         continue
                     scorer_name = ""
-                    for p in (play.get("participants") or []):
+                    for p in _as_list(play.get("participants")):
                         if not isinstance(p, dict):
                             continue
                         if str(p.get("type") or "").strip().lower() != "scorer":
                             continue
-                        ath = p.get("athlete") or {}
+                        ath = _as_dict(p.get("athlete"))
                         scorer_name = str(ath.get("displayName") or ath.get("fullName") or p.get("displayName") or "").strip()
                         if scorer_name:
                             break
@@ -7261,22 +7549,20 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                     if not scorer_name:
                         continue
                     goal_time = ""
-                    clk = play.get("clock")
-                    if isinstance(clk, dict):
-                        for k in ("displayValue", "shortDisplayValue", "value", "time"):
-                            v = clk.get(k)
-                            if isinstance(v, str) and v.strip():
-                                goal_time = v.strip()
-                                break
+                    clk = _as_dict(play.get("clock"))
+                    for k in ("displayValue", "shortDisplayValue", "value", "time"):
+                        v = clk.get(k)
+                        if isinstance(v, str) and v.strip():
+                            goal_time = v.strip()
+                            break
                     pd: dict[str, Any] = {}
-                    period = play.get("period")
-                    if isinstance(period, dict):
-                        pnum = _to_int(period.get("number"), default=-1)
-                        if pnum > 0:
-                            pd["number"] = pnum
-                        ptype = str(period.get("type") or period.get("abbreviation") or "").upper().strip()
-                        if ptype in {"OT", "SO"}:
-                            pd["periodType"] = ptype
+                    period = _as_dict(play.get("period"))
+                    pnum = _to_int(period.get("number"), default=-1)
+                    if pnum > 0:
+                        pd["number"] = pnum
+                    ptype = str(period.get("type") or period.get("abbreviation") or "").upper().strip()
+                    if ptype in {"OT", "SO"}:
+                        pd["periodType"] = ptype
                     row: dict[str, Any] = {"name": scorer_name}
                     if goal_time:
                         row["timeRemaining"] = goal_time
@@ -7294,9 +7580,9 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                     continue
                 summary = _get_summary_payload(gid, _summary_league_candidates(gg, league_hint))
                 enrich = _parse_summary_enrichment(summary, league_hint=league_hint) if isinstance(summary, dict) else {}
-                side_ref = enrich.get("__side_map__") if isinstance(enrich.get("__side_map__"), dict) else {}
-                status_ref = enrich.get("__game_status__") if isinstance(enrich.get("__game_status__"), dict) else {}
-                meta_ref = enrich.get("__game_meta__") if isinstance(enrich.get("__game_meta__"), dict) else {}
+                side_ref = _as_dict(enrich.get("__side_map__"))
+                status_ref = _as_dict(enrich.get("__game_status__"))
+                meta_ref = _as_dict(enrich.get("__game_meta__"))
                 if status_ref:
                     st = str(status_ref.get("gameState") or "").upper().strip()
                     if st:
@@ -7319,16 +7605,16 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                         divv = str(meta_ref.get("olympicsDivision") or "").strip()
                         if divv in {"Men's", "Women's"}:
                             gg["olympicsDivision"] = divv
-                away_code = str(((gg.get("awayTeam") or {}).get("abbrev") or "").upper())
-                home_code = str(((gg.get("homeTeam") or {}).get("abbrev") or "").upper())
+                away_code = str(_as_dict(gg.get("awayTeam")).get("abbrev") or "").upper()
+                home_code = str(_as_dict(gg.get("homeTeam")).get("abbrev") or "").upper()
                 timed_rows_by_code = (
                     _timed_rows_from_summary_for_game(summary, away_code, home_code)
                     if isinstance(summary, dict) and away_code and home_code
                     else {}
                 )
                 for side_key in ("awayTeam", "homeTeam"):
-                    team = gg.get(side_key) if isinstance(gg.get(side_key), dict) else None
-                    if not isinstance(team, dict):
+                    team = _as_dict(gg.get(side_key))
+                    if not team:
                         continue
                     code = str(team.get("abbrev") or team.get("abbreviation") or team.get("teamAbbrev") or "").upper()
                     if not code:
@@ -7338,7 +7624,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                         src = enrich.get(_base_code(code))
                     if not isinstance(src, dict):
                         side = "away" if side_key == "awayTeam" else "home"
-                        side_code = str((side_ref or {}).get(side) or "").upper()
+                        side_code = str(side_ref.get(side) or "").upper()
                         if side_code:
                             src = enrich.get(side_code) or enrich.get(_base_code(side_code))
                             # For future Olympic cards, scoreboard often keeps TBD while
@@ -7845,8 +8131,21 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
         all_games.extend(pwhl_ext)
         all_games.extend(pwhl_direct)
         _remember_game_win_probs([g for g in all_games if isinstance(g, dict)])
+        all_games = _preserve_cached_game_rows(all_games, xml_games)
+        for g in all_games:
+            if not str(g.get("_fetched_at") or "").strip():
+                g["_fetched_at"] = f"Updated: {_fmt_updated_ts()}"
+        all_games, spillover_games = _split_games_for_selected_date(
+            _dedupe_games([g for g in all_games if isinstance(g, dict)]),
+            d,
+        )
+        _write_spillover_games_to_xml(spillover_games)
         if not all_games and xml_games:
-            all_games = _dedupe_games([g for g in xml_games if isinstance(g, dict)])
+            all_games, xml_spillover_games = _split_games_for_selected_date(
+                _dedupe_games([g for g in xml_games if isinstance(g, dict)]),
+                d,
+            )
+            _write_spillover_games_to_xml(xml_spillover_games)
             for g in all_games:
                 if not str(g.get("_fetched_at") or "").strip():
                     g["_fetched_at"] = f"Updated: {_fmt_updated_ts()}"
@@ -7862,8 +8161,8 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
         def _has_tbd_matchup(game: dict[str, Any]) -> bool:
             if not isinstance(game, dict):
                 return False
-            away = game.get("awayTeam") if isinstance(game.get("awayTeam"), dict) else {}
-            home = game.get("homeTeam") if isinstance(game.get("homeTeam"), dict) else {}
+            away = _as_dict(game.get("awayTeam"))
+            home = _as_dict(game.get("homeTeam"))
             ac = str(away.get("abbrev") or away.get("abbreviation") or away.get("teamAbbrev") or "").strip().upper()
             hc = str(home.get("abbrev") or home.get("abbreviation") or home.get("teamAbbrev") or "").strip().upper()
             return ac == "TBD" or hc == "TBD"
@@ -8166,9 +8465,14 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             refresh_pwhl=True,
             refresh_moneypuck=True,
         )
+        checked_days, added_games = _backfill_missing_scheduled_games(
+            center_date=d,
+            allow_network=True,
+            force_network=True,
+        )
         # Re-plan next time from fresh cache after this refresh pass.
         day_source_plan.pop(d, None)
-        return _format_refresh_status(
+        msg = _format_refresh_status(
             "Refreshed",
             nhl_n=nhl_n,
             olympics_n=olympics_n,
@@ -8176,6 +8480,9 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             elapsed_s=(time.perf_counter() - t0),
             target_date=d,
         )
+        if checked_days > 0:
+            msg = f"{msg}  |  Schedule check {checked_days} day(s), added {added_games} game(s)"
+        return msg
 
     def _startup_refresh_with_backfill(d: dt.date) -> str:
         # Startup does a normal refresh for selected day, then walks backward

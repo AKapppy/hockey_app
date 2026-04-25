@@ -591,6 +591,13 @@ def _record_from_logs(rows: list[dict[str, Any]]) -> tuple[int, int, int]:
     return w, l, otl
 
 
+def _team_stats_row_has_data(row: dict[str, Any]) -> bool:
+    try:
+        return int(row.get("gp") or 0) > 0
+    except Exception:
+        return False
+
+
 def populate_team_stats_tab(
     parent: tk.Frame,
     *,
@@ -887,6 +894,7 @@ def populate_team_stats_tab(
         else:
             cur_date = dates[-1]
             rows = list(rows_map.get(cur_date) or [])
+        rows = [r for r in rows if isinstance(r, dict) and _team_stats_row_has_data(r)]
         rows = _rows_sorted(rows)
         state["rows"] = rows
         heat_ranks = _phase_heat_ranks(rows)

@@ -48,13 +48,16 @@ select {
   position: relative;
   padding: 2px;
   background: var(--window-bg);
+  --chrome-offset: 46px;
+  --main-tab-left: 0px;
+  --main-tab-right: 0px;
 }
 
 .global-controls {
   position: absolute;
-  left: 8px;
-  right: 8px;
-  top: 6px;
+  left: 6px;
+  right: 6px;
+  top: 4px;
   z-index: 20;
   display: flex;
   gap: 10px;
@@ -73,7 +76,7 @@ select {
 }
 
 .tk-button {
-  min-height: 32px;
+  min-height: 0;
   border: 0;
   border-radius: 0;
   background: var(--button-bg);
@@ -105,16 +108,24 @@ select {
   display: grid;
   grid-template-rows: auto 1fr;
   background: var(--window-bg);
+  padding-top: var(--chrome-offset);
 }
 
 .tabbar {
   display: flex;
   align-items: stretch;
+  justify-content: flex-start;
   min-height: 24px;
   padding: 0;
   background: var(--window-bg);
   overflow-x: auto;
   scrollbar-width: thin;
+}
+
+.tabbar[data-scope="main"] {
+  justify-content: center;
+  padding-left: var(--main-tab-left);
+  padding-right: var(--main-tab-right);
 }
 
 .tab {
@@ -200,7 +211,7 @@ select {
   min-height: 0;
   overflow: auto;
   background: var(--canvas-bg);
-  padding: 8px;
+  padding: 10px;
 }
 
 .scoreboard-date,
@@ -214,14 +225,32 @@ select {
 
 .scoreboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 360px));
+  justify-content: center;
+  gap: 22px;
+}
+
+.scoreboard-section + .scoreboard-section {
+  margin-top: 18px;
+}
+
+.scoreboard-section-title {
+  color: var(--soft-text);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 0 0 10px;
 }
 
 .game-card {
   border: 1px solid var(--grid-strong);
-  background: #2a2a2a;
-  padding: 8px;
+  background: #444444;
+  padding: 10px 12px;
+  aspect-ratio: 2.35 / 1;
+  max-width: 360px;
+  width: 100%;
+  margin: 0 auto;
+  display: grid;
+  align-content: start;
 }
 
 .game-meta,
@@ -235,12 +264,13 @@ select {
 .game-meta {
   color: var(--muted);
   font-size: 12px;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
+  grid-template-columns: auto 1fr auto;
 }
 
 .game-team {
   grid-template-columns: 30px 1fr auto;
-  min-height: 34px;
+  min-height: 40px;
   border-top: 1px solid var(--grid);
 }
 
@@ -290,24 +320,6 @@ select {
   font-size: 15px;
 }
 
-.playoff-layout {
-  display: grid;
-  grid-template-columns: minmax(520px, 1fr) minmax(420px, 0.8fr);
-  gap: 12px;
-}
-
-.standings-block {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(150px, 1fr));
-  gap: 8px;
-}
-
-.standings-col,
-.series-card {
-  border: 1px solid var(--grid-strong);
-  background: #2a2a2a;
-}
-
 .standing-row,
 .bracket-team {
   display: grid;
@@ -326,15 +338,255 @@ select {
   object-fit: contain;
 }
 
-.bracket-block {
+.playoff-shell {
+  min-width: 1240px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(160px, 1fr));
-  align-content: start;
-  gap: 8px;
+  grid-template-columns: minmax(520px, 0.92fr) minmax(680px, 1.08fr);
+  gap: 16px;
+  align-items: start;
 }
 
-.series-card {
-  padding: 0;
+.playoff-stage,
+.bracket-stage {
+  border: 1px solid var(--grid-strong);
+  background: #2a2a2a;
+  min-width: 0;
+}
+
+.playoff-stage-header,
+.bracket-stage-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  background: var(--header-bg);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.playoff-stage-body {
+  display: grid;
+  grid-template-columns: 124px minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px;
+  align-items: start;
+}
+
+.league-standings-panel h3,
+.wildcard-board-title {
+  margin: 0 0 8px;
+  padding: 6px 8px;
+  background: var(--header-bg);
+  font-size: 14px;
+}
+
+.league-standings-list {
+  border: 1px solid var(--grid-strong);
+  background: #262626;
+}
+
+.league-standings-list .standing-row {
+  min-height: 28px;
+  padding: 2px 6px;
+}
+
+.standing-row.is-empty {
+  min-height: 28px;
+}
+
+.wildcard-board {
+  min-width: 0;
+}
+
+.wildcard-board-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(118px, 1fr));
+  gap: 1px;
+  border: 1px solid var(--grid-strong);
+  background: var(--grid-strong);
+}
+
+.wildcard-head,
+.wildcard-spanner {
+  padding: 7px 8px;
+  background: var(--header-bg);
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--soft-text);
+}
+
+.wildcard-spanner {
+  grid-column: span 2;
+}
+
+.wildcard-board-grid .standing-row,
+.wildcard-span-cell {
+  background: #262626;
+}
+
+.wildcard-board-grid .standing-row {
+  min-height: 34px;
+  padding: 4px 6px;
+  border-top: 0;
+}
+
+.wildcard-span-cell {
+  grid-column: span 2;
+}
+
+.bracket-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  background: var(--button-bg);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.conference-grid {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px minmax(0, 1fr);
+  gap: 16px;
+  padding: 10px;
+  align-items: start;
+}
+
+.conference-bracket {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.conference-title {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--soft-text);
+  padding: 4px 0 2px;
+}
+
+.conference-round,
+.cup-column {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.round-label {
+  min-height: 18px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.round-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.round-two .round-stack {
+  gap: 54px;
+  padding-top: 36px;
+}
+
+.round-three .round-stack {
+  padding-top: 118px;
+}
+
+.bracket-series {
+  border: 1px solid var(--grid-strong);
+  background: #262626;
+}
+
+.bracket-series.cup-series {
+  min-height: 96px;
+}
+
+.bracket-series.cup-winner .bracket-team-line + .bracket-team-line {
+  display: none;
+}
+
+.bracket-team-line {
+  display: grid;
+  grid-template-columns: 24px 1fr 18px auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 8px;
+}
+
+.bracket-team-line + .bracket-team-line {
+  border-top: 1px solid var(--grid);
+}
+
+.bracket-team-line img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.bracket-team-line.is-empty {
+  min-height: 36px;
+  opacity: 0.35;
+}
+
+.bracket-team-line.is-predicted {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.series-win {
+  text-align: center;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.series-points {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.cup-column {
+  padding-top: 26px;
+}
+
+.cup-image-wrap,
+.cup-winner-wrap {
+  border: 1px solid var(--grid-strong);
+  background: #262626;
+}
+
+.cup-image-wrap {
+  display: grid;
+  place-items: center;
+  min-height: 186px;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.06), transparent 58%),
+    #262626;
+}
+
+.cup-image {
+  width: 82px;
+  height: auto;
+  opacity: 0.9;
+}
+
+.cup-winner-label {
+  padding: 8px 10px 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
 }
 
 .pie-view {
@@ -686,6 +938,7 @@ select {
   .notebook {
     height: auto;
     min-height: calc(100vh - 2px);
+    padding-top: 0;
   }
 
   .pie-content,
@@ -711,10 +964,38 @@ select {
     grid-template-columns: repeat(2, max-content);
   }
 
+  .tabbar[data-scope="main"] {
+    justify-content: flex-start;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
   .players-grid,
-  .playoff-layout,
-  .standings-block,
-  .bracket-block {
+  .playoff-shell {
+    min-width: 0;
     grid-template-columns: 1fr;
+  }
+
+  .playoff-stage-body,
+  .conference-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .conference-bracket {
+    grid-template-columns: 1fr;
+  }
+
+  .round-two .round-stack,
+  .round-three .round-stack,
+  .cup-column {
+    padding-top: 0;
+  }
+
+  .wildcard-board {
+    overflow: auto;
+  }
+
+  .wildcard-board-grid {
+    min-width: 500px;
   }
 }

@@ -5,9 +5,9 @@ import tkinter as tk
 from tkinter import font as tkfont
 from typing import Any, Callable
 
-from hockey_app.ui.tabs.models_data import load_points_history, points_snapshot
+from hockey_app.ui.tabs.models_data import load_points_history, points_snapshot, standings_tiebreak_snapshot
 from hockey_app.ui.tabs.models_logos import get_model_logo
-from hockey_app.ui.tabs.models_playoff_picture import _bracket_snapshot
+from hockey_app.ui.tabs.models_playoff_picture import _bracket_snapshot, _series_score_snapshot
 
 
 def _blend(a: str, b: str, t: float) -> str:
@@ -56,11 +56,57 @@ def _best_of_7_lengths(p: float) -> tuple[float, float, float, float]:
     return (in4, in5, in6, in7)
 
 
-def _series_table(a: str, b: str, pts: dict[str, float]) -> dict[str, object]:
+def _best_of_7_lengths_from_score(
+    p: float,
+    wins_for: int,
+    wins_against: int,
+) -> tuple[float, float, float, float]:
+    p = max(0.001, min(0.999, float(p)))
+    q = 1.0 - p
+    wf = max(0, int(wins_for))
+    wa = max(0, int(wins_against))
+    played = wf + wa
+
+    if wf >= 4:
+        return tuple(1.0 if total == played else 0.0 for total in range(4, 8))  # type: ignore[return-value]
+    if wa >= 4:
+        return (0.0, 0.0, 0.0, 0.0)
+
+    out: list[float] = []
+    wins_needed = 4 - wf
+    for total_games in range(4, 8):
+        remaining_games = total_games - played
+        if remaining_games < wins_needed or remaining_games <= 0:
+            out.append(0.0)
+            continue
+        opp_future_wins = remaining_games - wins_needed
+        if (wa + opp_future_wins) >= 4:
+            out.append(0.0)
+            continue
+        before_final = remaining_games - 1
+        needed_before_final = wins_needed - 1
+        if before_final < needed_before_final or needed_before_final < 0:
+            out.append(0.0)
+            continue
+        prob = _ncr(before_final, needed_before_final) * (p**wins_needed) * (q**opp_future_wins)
+        out.append(prob)
+    return tuple(out)  # type: ignore[return-value]
+
+
+def _series_table(
+    a: str,
+    b: str,
+    pts: dict[str, float],
+    series_scores: dict[tuple[str, str], dict[str, int]] | None = None,
+) -> dict[str, object]:
     pa = _series_win_prob(float(pts.get(a, 0.0)), float(pts.get(b, 0.0)))
-    pb = 1.0 - pa
-    a4, a5, a6, a7 = _best_of_7_lengths(pa)
-    b4, b5, b6, b7 = _best_of_7_lengths(pb)
+    wins = (series_scores or {}).get(tuple(sorted((a, b))), {})
+    a_wins = int(wins.get(a, 0))
+    b_wins = int(wins.get(b, 0))
+    a4, a5, a6, a7 = _best_of_7_lengths_from_score(pa, a_wins, b_wins)
+    b4, b5, b6, b7 = _best_of_7_lengths_from_score(1.0 - pa, b_wins, a_wins)
+    a_win = a4 + a5 + a6 + a7
+    b_win = b4 + b5 + b6 + b7
 
     outcomes = [
         (a, 4, a4), (a, 5, a5), (a, 6, a6), (a, 7, a7),
@@ -73,15 +119,21 @@ def _series_table(a: str, b: str, pts: dict[str, float]) -> dict[str, object]:
         "b": b,
         "a_probs": (a4, a5, a6, a7),
         "b_probs": (b4, b5, b6, b7),
-        "a_win": pa,
-        "b_win": pb,
+        "a_win": a_win,
+        "b_win": b_win,
         "pred": f"{pred_team} in {pred_len}",
         "winner": pred_team,
         "pred_p": pred_p,
+        "a_wins": a_wins,
+        "b_wins": b_wins,
     }
 
 
-def _pairwise(teams: list[str], pts: dict[str, float]) -> tuple[list[dict[str, object]], list[str]]:
+def _pairwise(
+    teams: list[str],
+    pts: dict[str, float],
+    series_scores: dict[tuple[str, str], dict[str, int]] | None = None,
+) -> tuple[list[dict[str, object]], list[str]]:
     rows: list[dict[str, object]] = []
     winners: list[str] = []
     for i in range(0, len(teams), 2):
@@ -89,7 +141,7 @@ def _pairwise(teams: list[str], pts: dict[str, float]) -> tuple[list[dict[str, o
         b = teams[i + 1] if i + 1 < len(teams) else ""
         if not a or not b:
             continue
-        info = _series_table(a, b, pts)
+        info = _series_table(a, b, pts, series_scores)
         rows.append(info)
         winners.append(str(info["winner"]))
     return rows, winners
@@ -152,24 +204,26 @@ def populate_playoff_win_probabilities_tab(
 
         return {"redraw": redraw, "reset": reset}
 
-    b = _bracket_snapshot(pts)
+    standings = standings_tiebreak_snapshot(d1) if str(league or "NHL").upper() == "NHL" else {}
+    b = _bracket_snapshot(pts, standings)
+    series_scores = _series_score_snapshot(d1, league=str(league or "NHL").upper())
     west_r1 = [t for t in b.get("West_R1", []) if t]
     east_r1 = [t for t in b.get("East_R1", []) if t]
 
     rounds: list[tuple[str, list[dict[str, object]]]] = []
-    r1_w, w_winners = _pairwise(west_r1, pts)
-    r1_e, e_winners = _pairwise(east_r1, pts)
+    r1_w, w_winners = _pairwise(west_r1, pts, series_scores)
+    r1_e, e_winners = _pairwise(east_r1, pts, series_scores)
     rounds.append(("Round 1", r1_w + r1_e))
-    r2_w, w2 = _pairwise(w_winners, pts)
-    r2_e, e2 = _pairwise(e_winners, pts)
+    r2_w, w2 = _pairwise(w_winners, pts, series_scores)
+    r2_e, e2 = _pairwise(e_winners, pts, series_scores)
     if r2_w or r2_e:
         rounds.append(("Round 2", r2_w + r2_e))
-    cf_w, w3 = _pairwise(w2, pts)
-    cf_e, e3 = _pairwise(e2, pts)
+    cf_w, w3 = _pairwise(w2, pts, series_scores)
+    cf_e, e3 = _pairwise(e2, pts, series_scores)
     cf = cf_w + cf_e
     if cf:
         rounds.append(("Conference Finals", cf))
-    cup, _ = _pairwise(w3 + e3, pts)
+    cup, _ = _pairwise(w3 + e3, pts, series_scores)
     if cup:
         rounds.append(("Stanley Cup Final", cup))
 
@@ -299,9 +353,11 @@ def populate_playoff_win_probabilities_tab(
 
                 x2 = tx0 + cols[1][1]
                 for val, (_name, w) in zip((p4, p5, p6, p7), cols[2:6]):
-                    fill = _heat_rank01(val / series_max) if series_max > 0 else _heat_rank01(0.0)
+                    impossible = val <= 0.0
+                    fill = "#353535" if impossible else (_heat_rank01(val / series_max) if series_max > 0 else _heat_rank01(0.0))
                     c.create_rectangle(x2, ry, x2 + w, ry + row_h, fill=fill, outline="#3a3a3a")
-                    c.create_text(x2 + w / 2, ry + row_h / 2, text=pct_txt(val), fill="#f0f0f0", anchor="center", font=cell_font)
+                    txt_fill = "#9a9a9a" if impossible else "#f0f0f0"
+                    c.create_text(x2 + w / 2, ry + row_h / 2, text=pct_txt(val), fill=txt_fill, anchor="center", font=cell_font)
                     x2 += w
             y_loc += row_h * 2
         return y_loc

@@ -155,6 +155,13 @@ def _export_games(season: str, start: dt.date, end: dt.date) -> dict[str, Any]:
             slim_rows.append(
                 {
                     "id": game.get("id"),
+                    "gameType": str(
+                        game.get("gameType")
+                        or game.get("gameTypeId")
+                        or game.get("game_type")
+                        or game.get("game_type_id")
+                        or ""
+                    ),
                     "league": game.get("league") or "NHL",
                     "state": str(game.get("gameState") or "").upper(),
                     "status": game.get("statusText") or "",
@@ -311,6 +318,11 @@ def build_payload(
         )
     team_rows.sort(key=lambda team: (-float(team["sortValue"]), str(team["name"])))
 
+    # Desktop-backed tabs should export the same current cache range the desktop
+    # app can render, not just the span covered by simulation CSVs.
+    desktop_start = _season_start(season)
+    desktop_end = max(end, dt.date.today())
+
     return {
         "metadata": {
             "season": season,
@@ -325,7 +337,7 @@ def build_payload(
         ],
         "teams": team_rows,
         "tables": table_payload,
-        "desktop": _export_desktop_data(season, start, end),
+        "desktop": _export_desktop_data(season, desktop_start, desktop_end),
     }
 
 

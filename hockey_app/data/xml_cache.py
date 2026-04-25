@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 import io
+import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, Optional
@@ -34,6 +35,24 @@ def _to_int(value: Any) -> Optional[int]:
         return int(float(value))
     except Exception:
         return None
+
+
+def _status_time_sort_value(day: dt.date, status_text: Any) -> str:
+    stxt = _to_text(status_text).upper()
+    m = re.search(r"\b(\d{1,2})(?::(\d{2}))?\s*([AP]M)\b", stxt)
+    if not m:
+        return ""
+    hour = int(m.group(1))
+    minute = int(m.group(2) or 0)
+    ampm = m.group(3)
+    if hour == 12:
+        hour = 0
+    if ampm == "PM":
+        hour += 12
+    try:
+        return dt.datetime(day.year, day.month, day.day, hour, minute).isoformat()
+    except Exception:
+        return ""
 
 
 def _read_or_new(path: Path, root_tag: str = "cache") -> tuple[ET.ElementTree, ET.Element]:
@@ -183,8 +202,12 @@ def write_games_day_xml(*, season: str, day: dt.date, games: list[dict[str, Any]
             root.remove(node)
     day_node = ET.SubElement(root, "day", {"date": day_iso})
 
-    def sort_key(game: dict[str, Any]) -> tuple[str, int]:
-        return (_to_text(game.get("startTimeUTC") or game.get("startTime")), _to_int(game.get("id") or game.get("gameId")) or 0)
+    def sort_key(game: dict[str, Any]) -> tuple[int, str, int]:
+        start_key = _to_text(game.get("startTimeUTC") or game.get("startTime"))
+        if not start_key:
+            start_key = _status_time_sort_value(day, game.get("statusText"))
+        has_start = 0 if start_key else 1
+        return (has_start, start_key, _to_int(game.get("id") or game.get("gameId")) or 0)
 
     for game in sorted([g for g in games if isinstance(g, dict)], key=sort_key):
         away = game.get("awayTeam") if isinstance(game.get("awayTeam"), dict) else {}

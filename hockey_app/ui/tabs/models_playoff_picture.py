@@ -2,94 +2,234 @@ from __future__ import annotations
 
 import datetime as dt
 import tkinter as tk
+import xml.etree.ElementTree as ET
 from tkinter import ttk
 from typing import Any, Callable
 
-from hockey_app.config import TEAM_NAMES, TEAM_TO_CONF, TEAM_TO_DIV
-from hockey_app.ui.tabs.models_data import load_points_history, points_snapshot
+from hockey_app.config import SEASON, TEAM_NAMES, TEAM_TO_CONF, TEAM_TO_DIV
+from hockey_app.data.paths import cache_dir
+from hockey_app.ui.tabs.models_data import (
+    load_points_history,
+    points_snapshot,
+    standings_tiebreak_snapshot,
+)
 from hockey_app.ui.tabs.models_logos import get_model_logo
 
 
-def _wildcard_columns_snapshot(pts: dict[str, float]) -> dict[str, list[str]]:
+def _to_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except Exception:
+        try:
+            return int(float(value))
+        except Exception:
+            return int(default)
+
+
+def _team_sort_key(
+    code: str,
+    pts: dict[str, float],
+    standings: dict[str, dict[str, Any]] | None,
+    *,
+    scope: str,
+) -> tuple[Any, ...]:
+    info = (standings or {}).get(code, {}) if isinstance(standings, dict) else {}
+    seq_key = "leagueSequence"
+    if scope == "conf":
+        seq_key = "conferenceSequence"
+    elif scope == "div":
+        seq_key = "divisionSequence"
+    seq = _to_int(info.get(seq_key) if isinstance(info, dict) else 999, 999)
+    pts_v = float(pts.get(code, 0.0))
+    row_v = _to_int(info.get("row") if isinstance(info, dict) else 0, 0)
+    rw_v = _to_int(info.get("rw") if isinstance(info, dict) else 0, 0)
+    if 1 <= seq < 900:
+        return (0, seq, -pts_v, -row_v, -rw_v, TEAM_NAMES.get(code, code), code)
+    return (1, -pts_v, -row_v, -rw_v, TEAM_NAMES.get(code, code), code)
+
+
+def _sorted_codes(
+    codes: list[str],
+    pts: dict[str, float],
+    standings: dict[str, dict[str, Any]] | None,
+    *,
+    scope: str,
+) -> list[str]:
+    return sorted(codes, key=lambda code: _team_sort_key(code, pts, standings, scope=scope))
+
+
+def _wildcard_columns_snapshot(
+    pts: dict[str, float],
+    standings: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, list[str]]:
     out: dict[str, list[str]] = {k: [] for k in ("Pacific", "Central", "Atlantic", "Metro", "WestWC", "EastWC")}
     for div in ("Pacific", "Central", "Atlantic", "Metro"):
         pool = [c for c in pts if TEAM_TO_DIV.get(c) == div]
-        out[div] = sorted(pool, key=lambda c: (-pts[c], TEAM_NAMES.get(c, c), c))
+        out[div] = _sorted_codes(pool, pts, standings, scope="div")
 
     west_taken = set(out["Pacific"][:3] + out["Central"][:3])
     east_taken = set(out["Atlantic"][:3] + out["Metro"][:3])
 
-    west_all = sorted([c for c in pts if TEAM_TO_CONF.get(c) == "West"], key=lambda c: (-pts[c], TEAM_NAMES.get(c, c), c))
-    east_all = sorted([c for c in pts if TEAM_TO_CONF.get(c) == "East"], key=lambda c: (-pts[c], TEAM_NAMES.get(c, c), c))
+    west_all = _sorted_codes([c for c in pts if TEAM_TO_CONF.get(c) == "West"], pts, standings, scope="conf")
+    east_all = _sorted_codes([c for c in pts if TEAM_TO_CONF.get(c) == "East"], pts, standings, scope="conf")
 
     out["WestWC"] = [c for c in west_all if c not in west_taken]
     out["EastWC"] = [c for c in east_all if c not in east_taken]
     return out
 
 
-def _bracket_snapshot(pts: dict[str, float]) -> dict[str, list[str]]:
-    # Rebuild bracket directly from the same divisional + wildcard placement
-    # used in the 1st-round standings block so the visual bracket always matches.
-    cols = _wildcard_columns_snapshot(pts)
-    pac = cols.get("Pacific", [])
-    cen = cols.get("Central", [])
-    atl = cols.get("Atlantic", [])
-    met = cols.get("Metro", [])
-    wwc = cols.get("WestWC", [])
-    ewc = cols.get("EastWC", [])
+def _conference_bracket_slots(
+    pts: dict[str, float],
+    standings: dict[str, dict[str, Any]] | None,
+    *,
+    conference: str,
+    layout_divisions: tuple[str, str],
+) -> list[str]:
+    cols = _wildcard_columns_snapshot(pts, standings)
+    first_div = cols.get(layout_divisions[0], [])
+    second_div = cols.get(layout_divisions[1], [])
+    wc_key = "WestWC" if conference == "West" else "EastWC"
+    wildcards = cols.get(wc_key, [])
+    better_wc = wildcards[0] if len(wildcards) > 0 else ""
+    lesser_wc = wildcards[1] if len(wildcards) > 1 else ""
 
+    division_winners = [codes[0] for codes in (first_div, second_div) if codes]
+    ordered_winners = _sorted_codes(division_winners, pts, standings, scope="conf")
+    best_div_winner = ordered_winners[0] if ordered_winners else ""
+
+    first_winner = first_div[0] if len(first_div) > 0 else ""
+    second_winner = second_div[0] if len(second_div) > 0 else ""
+    first_wc = lesser_wc if first_winner and first_winner == best_div_winner else better_wc
+    second_wc = lesser_wc if second_winner and second_winner == best_div_winner else better_wc
+
+    return [
+        first_winner,
+        first_wc,
+        first_div[1] if len(first_div) > 1 else "",
+        first_div[2] if len(first_div) > 2 else "",
+        second_winner,
+        second_wc,
+        second_div[1] if len(second_div) > 1 else "",
+        second_div[2] if len(second_div) > 2 else "",
+    ]
+
+
+def _bracket_snapshot(
+    pts: dict[str, float],
+    standings: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, list[str]]:
+    # Match NHL wildcard assignment rules: the stronger division winner in each
+    # conference gets the lower-seeded wildcard, regardless of layout order.
     return {
-        "West_R1": [
-            pac[0] if len(pac) > 0 else "",
-            wwc[1] if len(wwc) > 1 else "",
-            pac[1] if len(pac) > 1 else "",
-            pac[2] if len(pac) > 2 else "",
-            cen[0] if len(cen) > 0 else "",
-            wwc[0] if len(wwc) > 0 else "",
-            cen[1] if len(cen) > 1 else "",
-            cen[2] if len(cen) > 2 else "",
-        ],
-        "East_R1": [
-            atl[0] if len(atl) > 0 else "",
-            ewc[1] if len(ewc) > 1 else "",
-            atl[1] if len(atl) > 1 else "",
-            atl[2] if len(atl) > 2 else "",
-            met[0] if len(met) > 0 else "",
-            ewc[0] if len(ewc) > 0 else "",
-            met[1] if len(met) > 1 else "",
-            met[2] if len(met) > 2 else "",
-        ],
+        "West_R1": _conference_bracket_slots(
+            pts,
+            standings,
+            conference="West",
+            layout_divisions=("Pacific", "Central"),
+        ),
+        "East_R1": _conference_bracket_slots(
+            pts,
+            standings,
+            conference="East",
+            layout_divisions=("Atlantic", "Metro"),
+        ),
     }
 
 
-def _bracket_snapshot_conf_1v8(pts: dict[str, float]) -> dict[str, list[str]]:
+def _bracket_snapshot_conf_1v8(
+    pts: dict[str, float],
+    standings: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, list[str]]:
     out: dict[str, list[str]] = {}
     for conf in ("West", "East"):
         conf_codes = [c for c in pts if TEAM_TO_CONF.get(c) == conf]
-        conf_sorted = sorted(conf_codes, key=lambda c: (-pts[c], TEAM_NAMES.get(c, c), c))[:8]
+        conf_sorted = _sorted_codes(conf_codes, pts, standings, scope="conf")[:8]
         # 1v8, 4v5, 2v7, 3v6
         pairs = [(0, 7), (3, 4), (1, 6), (2, 5)]
         out[f"{conf}_R1"] = [conf_sorted[i] if i < len(conf_sorted) else "" for a, b in pairs for i in (a, b)]
     return out
 
 
-def _bracket_snapshot_league_1v16(pts: dict[str, float]) -> dict[str, list[str]]:
-    league_sorted = sorted(pts.keys(), key=lambda c: (-pts[c], TEAM_NAMES.get(c, c), c))[:16]
+def _bracket_snapshot_league_1v16(
+    pts: dict[str, float],
+    standings: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, list[str]]:
+    league_sorted = _sorted_codes(list(pts.keys()), pts, standings, scope="league")[:16]
     pairs = [(0, 15), (7, 8), (3, 12), (4, 11), (1, 14), (6, 9), (2, 13), (5, 10)]
     ordered = [league_sorted[i] if i < len(league_sorted) else "" for a, b in pairs for i in (a, b)]
     return {"West_R1": ordered[:8], "East_R1": ordered[8:16]}
 
 
-def _bracket_snapshot_league_1v8(pts: dict[str, float]) -> dict[str, list[str]]:
+def _bracket_snapshot_league_1v8(
+    pts: dict[str, float],
+    standings: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, list[str]]:
     # Standard league seeding for 8-team fields:
     # 1v8, 4v5 on one side; 2v7, 3v6 on the other.
-    league_sorted = sorted(pts.keys(), key=lambda c: (-pts[c], TEAM_NAMES.get(c, c), c))[:8]
+    league_sorted = _sorted_codes(list(pts.keys()), pts, standings, scope="league")[:8]
     pairs = [(0, 7), (3, 4), (1, 6), (2, 5)]
     ordered = [league_sorted[i] if i < len(league_sorted) else "" for a, b in pairs for i in (a, b)]
     return {
         "West_R1": ordered[:4] + ["", "", "", ""],
         "East_R1": ordered[4:8] + ["", "", "", ""],
     }
+
+
+def _series_key(a: str, b: str) -> tuple[str, str]:
+    aa = str(a or "").upper().strip()
+    bb = str(b or "").upper().strip()
+    return (aa, bb) if aa <= bb else (bb, aa)
+
+
+def _series_score_snapshot(day: dt.date, *, league: str) -> dict[tuple[str, str], dict[str, int]]:
+    if str(league or "").upper() != "NHL":
+        return {}
+    path = cache_dir() / "online" / "xml" / str(SEASON) / "games.xml"
+    if not path.exists():
+        return {}
+    try:
+        root = ET.parse(path).getroot()
+    except Exception:
+        return {}
+
+    out: dict[tuple[str, str], dict[str, int]] = {}
+    for day_node in root.findall("day"):
+        raw_day = str(day_node.get("date") or "").strip()
+        try:
+            game_day = dt.date.fromisoformat(raw_day[:10])
+        except Exception:
+            continue
+        if game_day > day:
+            continue
+        for game in day_node.findall("game"):
+            if str(game.get("league") or "").upper() != "NHL":
+                continue
+            gid = str(game.get("id") or "").strip()
+            game_type = str(game.get("game_type") or game.get("game_type_id") or game.get("game_type_code") or "").strip()
+            is_playoff = game_type in {"3", "P"} or gid.startswith("202503")
+            if not is_playoff:
+                continue
+            state = str(game.get("state") or "").upper().strip()
+            if state not in {"FINAL", "OFF"} and not state.startswith("FINAL"):
+                continue
+            away = str(game.get("away_code") or "").upper().strip()
+            home = str(game.get("home_code") or "").upper().strip()
+            if not away or not home:
+                continue
+            try:
+                away_score = int(str(game.get("away_score") or "0"))
+                home_score = int(str(game.get("home_score") or "0"))
+            except Exception:
+                continue
+            if away_score == home_score:
+                continue
+            winner = away if away_score > home_score else home
+            key = _series_key(away, home)
+            bucket = out.setdefault(key, {away: 0, home: 0})
+            bucket.setdefault(away, 0)
+            bucket.setdefault(home, 0)
+            bucket[winner] = int(bucket.get(winner, 0)) + 1
+    return out
 
 
 def populate_playoff_picture_tab(
@@ -224,19 +364,31 @@ def populate_playoff_picture_tab(
         else:
             canvas.create_text(x + w / 2, y + h / 2, text=code, fill="#f0f0f0", anchor="center", font=("TkDefaultFont", 10, "bold"), tags=("bracket_logo",))
 
-    def draw_presidents(pts: dict[str, float], x0: int, y0: int, states: dict[str, str]) -> int:
+    def draw_presidents(
+        pts: dict[str, float],
+        x0: int,
+        y0: int,
+        states: dict[str, str],
+        standings: dict[str, dict[str, Any]] | None,
+    ) -> int:
         row_h = 26
         w = 118
-        sorted_all = sorted(pts.items(), key=lambda kv: (-kv[1], TEAM_NAMES.get(kv[0], kv[0]), kv[0]))
+        sorted_all = _sorted_codes(list(pts.keys()), pts, standings, scope="league")
         y = y0
-        for code, _v in sorted_all[:32]:
+        for code in sorted_all[:32]:
             draw_code_cell(x0, y, code, w=w, h=row_h, state_hint=states.get(code, ""))
             hover_cells.append((x0, y, x0 + w, y + row_h, str(code)))
             y += row_h
         return y
 
-    def draw_wildcard(pts: dict[str, float], x0: int, y0: int, states: dict[str, str]) -> int:
-        cols = _wildcard_columns_snapshot(pts)
+    def draw_wildcard(
+        pts: dict[str, float],
+        x0: int,
+        y0: int,
+        states: dict[str, str],
+        standings: dict[str, dict[str, Any]] | None,
+    ) -> int:
+        cols = _wildcard_columns_snapshot(pts, standings)
         row_h = 38
         cw = 104
 
@@ -288,6 +440,7 @@ def populate_playoff_picture_tab(
         align: str,
         pts: dict[str, float],
         states: dict[str, str],
+        series_scores: dict[tuple[str, str], dict[str, int]],
     ) -> tuple[int, int, str]:
         row_h = 72
         intra_pair_gap = 12
@@ -321,6 +474,29 @@ def populate_playoff_picture_tab(
         # segment is visible beside the logo.
         x_r0 = x0 - (12 if align == "right" else -12)
 
+        def _draw_series_number(code: str, opp: str, y_center: float) -> None:
+            if not code or not opp:
+                return
+            wins = series_scores.get(_series_key(code, opp), {})
+            code_wins = int(wins.get(code, 0))
+            opp_wins = int(wins.get(opp, 0))
+            color = "#7fdc7f" if code_wins > opp_wins else "#ff7b7b" if code_wins < opp_wins else "#f0f0f0"
+            if align == "right":
+                x = x_r0 + col_w + 8
+                anchor = "w"
+            else:
+                x = x_r0 - 8
+                anchor = "e"
+            canvas.create_text(
+                x,
+                y_center,
+                text=str(code_wins),
+                fill=color,
+                anchor=anchor,
+                font=("TkDefaultFont", 18, "bold"),
+                tags=("bracket_series_score",),
+            )
+
         for m in range(4):
             y = y0 + m * (pair_h + pair_gap)
             a = teams_r1[m * 2] if m * 2 < len(teams_r1) else ""
@@ -330,6 +506,8 @@ def populate_playoff_picture_tab(
             draw_code_cell(x_r0, y + row_h + intra_pair_gap, b, w=col_w, h=row_h, logos_only=True, state_hint=states.get(b, ""))
             yc_a = y + row_h / 2
             yc_b = y + row_h + intra_pair_gap + row_h / 2
+            _draw_series_number(a, b, yc_a)
+            _draw_series_number(b, a, yc_b)
             pair_centers.append((yc_a, yc_b))
             mids.append((yc_a + yc_b) / 2)
 
@@ -420,21 +598,44 @@ def populate_playoff_picture_tab(
         # Keep neutral until solver-backed clinch/elimination is wired from Magic/Tragic.
         return {}
 
-    def draw_bracket(pts: dict[str, float], x0: int, y0: int, states: dict[str, str]) -> int:
+    def draw_bracket(
+        pts: dict[str, float],
+        x0: int,
+        y0: int,
+        states: dict[str, str],
+        series_scores: dict[tuple[str, str], dict[str, int]],
+        standings: dict[str, dict[str, Any]] | None,
+    ) -> int:
         mode = mode_var.get()
         if mode == "Conference 1-8":
-            b = _bracket_snapshot_conf_1v8(pts)
+            b = _bracket_snapshot_conf_1v8(pts, standings)
         elif mode == "League 1-8":
-            b = _bracket_snapshot_league_1v8(pts)
+            b = _bracket_snapshot_league_1v8(pts, standings)
         elif mode == "League 1-16":
-            b = _bracket_snapshot_league_1v16(pts)
+            b = _bracket_snapshot_league_1v16(pts, standings)
         else:
-            b = _bracket_snapshot(pts)
+            b = _bracket_snapshot(pts, standings)
         west = b.get("West_R1", [])
         east = b.get("East_R1", [])
         east_x0 = x0 + 1060
-        west_out_x, west_mid_y, west_champ = draw_side_bracket(x0, y0, west, align="right", pts=pts, states=states)
-        east_out_x, east_mid_y, east_champ = draw_side_bracket(east_x0, y0, east, align="left", pts=pts, states=states)
+        west_out_x, west_mid_y, west_champ = draw_side_bracket(
+            x0,
+            y0,
+            west,
+            align="right",
+            pts=pts,
+            states=states,
+            series_scores=series_scores,
+        )
+        east_out_x, east_mid_y, east_champ = draw_side_bracket(
+            east_x0,
+            y0,
+            east,
+            align="left",
+            pts=pts,
+            states=states,
+            series_scores=series_scores,
+        )
 
         cup_cx = int(round((west_out_x + east_out_x) / 2.0))
         cup_final_y = int(round((west_mid_y + east_mid_y) / 2.0))
@@ -471,6 +672,7 @@ def populate_playoff_picture_tab(
             canvas.create_text(20, 20, text="No standings data available.", fill="#d0d0d0", anchor="w")
             canvas.configure(scrollregion=(0, 0, 1200, 400))
             return
+        standings = standings_tiebreak_snapshot(day) if league_u == "NHL" else {}
 
         league_x = 24
         league_w = 118
@@ -499,9 +701,10 @@ def populate_playoff_picture_tab(
 
         data_y = top_y + 46
         status = _status_map(pts)
-        p_end = draw_presidents(pts, league_x, data_y, status)
-        w_end = draw_wildcard(pts, wc_x, data_y, status)
-        b_end = draw_bracket(pts, bracket_left, 62, status)
+        series_scores = _series_score_snapshot(day, league=league_u)
+        p_end = draw_presidents(pts, league_x, data_y, status, standings)
+        w_end = draw_wildcard(pts, wc_x, data_y, status, standings)
+        b_end = draw_bracket(pts, bracket_left, 62, status, series_scores, standings)
         bottom = max(p_end, w_end, b_end) + 24
         canvas.configure(scrollregion=(0, 0, max(1700, bracket_right + 2), max(980, bottom)))
 

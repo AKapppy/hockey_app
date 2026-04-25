@@ -87,11 +87,20 @@ def launch_predictions_ui_window(
     public_predictions_page.grid_rowconfigure(0, weight=1)
     public_predictions_page.grid_columnconfigure(0, weight=1)
     public_predictions_page.grid_rowconfigure(1, weight=0)
+    inserted_public_predictions = False
     try:
         scaffold.main_notebook.insert(scaffold.models_page, public_predictions_page, text="Predictions 2")
+        inserted_public_predictions = True
     except Exception:
         scaffold.add_gap_tab(scaffold.main_notebook)
         scaffold.main_notebook.add(public_predictions_page, text="Predictions 2")
+    if inserted_public_predictions:
+        try:
+            models_gap = ttk.Frame(scaffold.main_notebook, padding=0)
+            scaffold.main_notebook.insert(scaffold.models_page, models_gap, text=" ")
+            scaffold.main_notebook.tab(models_gap, state="disabled", padding=(2, 3))
+        except Exception:
+            pass
 
     public_pred_notebook = ttk.Notebook(public_predictions_page, style="NB.TNotebook")
     public_pred_notebook.grid(row=0, column=0, sticky="nsew", pady=(0, 0))
