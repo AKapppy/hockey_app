@@ -6694,12 +6694,16 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                 day_payload_stamp[d] = stamp
                 return live_hit, None, stamp
             _set_day_finalized(d, False)
-            if d < today and allow_network:
-                # Only case B: past data that is not final can refresh from API.
+            if allow_network and (d < today or force_network):
+                # Past non-final days can refresh from API.
+                # Also allow a forced manual refresh for future days
+                # so upcoming playoff games can be fetched even if the
+                # live cache is stale or empty.
                 try:
                     raw = nhl.score(d, force_network=force_network)
                     if isinstance(raw, dict):
-                        _set_day_finalized(d, _all_final(list(raw.get("games") or [])))
+                        if d <= today:
+                            _set_day_finalized(d, _all_final(list(raw.get("games") or [])))
                         day_payload_cache[d] = raw
                         stamp = _stamp_from_cache()
                         day_payload_stamp[d] = stamp
@@ -6715,12 +6719,14 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             return live_hit, None, stamp
 
         # No cache entry:
-        if d < today and allow_network:
-            # Allow one API fill for past days (then cached permanently).
+        if allow_network and (d < today or force_network):
+            # Allow one API fill for past days, and also for future days
+            # when the user explicitly forces a refresh.
             try:
                 raw = nhl.score(d, force_network=force_network)
                 if isinstance(raw, dict):
-                    _set_day_finalized(d, _all_final(list(raw.get("games") or [])))
+                    if d <= today:
+                        _set_day_finalized(d, _all_final(list(raw.get("games") or [])))
                     day_payload_cache[d] = raw
                     stamp = _stamp_from_cache()
                     day_payload_stamp[d] = stamp
