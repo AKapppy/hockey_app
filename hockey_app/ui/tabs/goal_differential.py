@@ -189,6 +189,7 @@ def populate_goal_differential_tab(
 
     league_u = str(league or "NHL").upper()
     cache = DiskCache(nhl_dir(SEASON))
+    real_today = dt.date.today()
     today = END_DATE
     if league_u == "PWHL":
         pwhl_cache = DiskCache(pwhl_dir(SEASON))
@@ -205,7 +206,7 @@ def populate_goal_differential_tab(
             df = xml_df.copy()
             original_order = [str(x) for x in list(df.index)]
         else:
-            cached_payload = cache.get_json(key, ttl_s=600)
+            cached_payload = cache.get_json(key, ttl_s=600) if end < real_today else None
             parsed = _df_from_payload(cached_payload) if isinstance(cached_payload, dict) else None
             if parsed is not None:
                 df, original_order = parsed
@@ -235,7 +236,7 @@ def populate_goal_differential_tab(
             df = xml_df.copy()
             original_order = [str(x) for x in list(df.index)]
         else:
-            cached_payload = cache.get_json(key, ttl_s=600)
+            cached_payload = cache.get_json(key, ttl_s=600) if end < real_today else None
             parsed = _df_from_payload(cached_payload) if isinstance(cached_payload, dict) else None
             if parsed is not None:
                 df, original_order = parsed

@@ -85,6 +85,7 @@ def get_model_logo(
     logo_bank: Any | None,
     league: str,
     master: tk.Misc,
+    dim: bool = False,
 ) -> Any:
     league_u = str(league or "NHL").upper().strip()
     if league_u == "PWHL":
@@ -92,6 +93,6 @@ def get_model_logo(
     if logo_bank is None:
         return None
     try:
-        return logo_bank.get(code, height=height, dim=False)
+        return logo_bank.get(code, height=height, dim=bool(dim), dim_amt=0.60)
     except Exception:
         return None

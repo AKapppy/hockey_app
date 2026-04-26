@@ -37,6 +37,11 @@ def _to_int(value: Any) -> Optional[int]:
         return None
 
 
+def _to_bool(value: Any) -> bool:
+    text = _to_text(value).lower()
+    return text in {"1", "true", "yes", "y", "on"}
+
+
 def _status_time_sort_value(day: dt.date, status_text: Any) -> str:
     stxt = _to_text(status_text).upper()
     m = re.search(r"\b(\d{1,2})(?::(\d{2}))?\s*([AP]M)\b", stxt)
@@ -189,6 +194,43 @@ def _game_shots(team_obj: dict[str, Any]) -> str:
     return ""
 
 
+def _game_clock_remaining(game_obj: dict[str, Any]) -> str:
+    if not isinstance(game_obj, dict):
+        return ""
+    clock = game_obj.get("clock")
+    if not isinstance(clock, dict):
+        return ""
+    return _to_text(clock.get("timeRemaining") or clock.get("time"))
+
+
+def _game_clock_intermission(game_obj: dict[str, Any]) -> str:
+    if not isinstance(game_obj, dict):
+        return ""
+    clock = game_obj.get("clock")
+    if not isinstance(clock, dict):
+        return ""
+    return "1" if bool(clock.get("inIntermission")) else ""
+
+
+def _game_period_number(game_obj: dict[str, Any]) -> str:
+    if not isinstance(game_obj, dict):
+        return ""
+    pd = game_obj.get("periodDescriptor")
+    if not isinstance(pd, dict):
+        return ""
+    value = _to_int(pd.get("number"))
+    return "" if value is None else str(value)
+
+
+def _game_period_type(game_obj: dict[str, Any]) -> str:
+    if not isinstance(game_obj, dict):
+        return ""
+    pd = game_obj.get("periodDescriptor")
+    if not isinstance(pd, dict):
+        return ""
+    return _to_text(pd.get("periodType")).upper()
+
+
 def write_games_day_xml(*, season: str, day: dt.date, games: list[dict[str, Any]]) -> Path:
     path = _xml_path(season, "games")
     tree, root = _read_or_new(path)
@@ -226,6 +268,10 @@ def write_games_day_xml(*, season: str, day: dt.date, games: list[dict[str, Any]
             "home_score": _game_score(home),
             "away_shots": _game_shots(away),
             "home_shots": _game_shots(home),
+            "clock_remaining": _game_clock_remaining(game),
+            "clock_intermission": _game_clock_intermission(game),
+            "period_number": _game_period_number(game),
+            "period_type": _game_period_type(game),
             # Preserve postseason metadata so cached/web fallbacks keep playoff labels.
             "season_value": _to_text(game.get("season")),
             "game_type": _to_text(game.get("gameType")),
@@ -292,6 +338,24 @@ def read_games_day_xml(*, season: str, day: dt.date) -> list[dict[str, Any]]:
             "awayTeam": away,
             "homeTeam": home,
         }
+        clock_remaining = _to_text(game.get("clock_remaining"))
+        clock_intermission = _to_bool(game.get("clock_intermission"))
+        if clock_remaining or clock_intermission:
+            clock: dict[str, Any] = {}
+            if clock_remaining:
+                clock["timeRemaining"] = clock_remaining
+            if clock_intermission:
+                clock["inIntermission"] = True
+            row["clock"] = clock
+        period_number = _to_int(game.get("period_number"))
+        period_type = _to_text(game.get("period_type")).upper()
+        if (period_number is not None and period_number > 0) or period_type:
+            pd: dict[str, Any] = {}
+            if period_number is not None and period_number > 0:
+                pd["number"] = period_number
+            if period_type:
+                pd["periodType"] = period_type
+            row["periodDescriptor"] = pd
         season_value = _to_int(game.get("season_value"))
         if season_value is not None:
             row["season"] = season_value

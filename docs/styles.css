@@ -265,13 +265,30 @@ select {
   color: var(--muted);
   font-size: 12px;
   margin-bottom: 10px;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
+}
+
+.game-meta-status {
+  text-align: right;
 }
 
 .game-team {
   grid-template-columns: 30px 1fr auto;
   min-height: 40px;
   border-top: 1px solid var(--grid);
+}
+
+.game-team-main {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.game-team-shots {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .game-team img {

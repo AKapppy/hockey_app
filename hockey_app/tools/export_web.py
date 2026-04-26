@@ -152,6 +152,8 @@ def _export_games(season: str, start: dt.date, end: dt.date) -> dict[str, Any]:
         for game in rows:
             away = game.get("awayTeam") if isinstance(game.get("awayTeam"), dict) else {}
             home = game.get("homeTeam") if isinstance(game.get("homeTeam"), dict) else {}
+            clock = game.get("clock") if isinstance(game.get("clock"), dict) else {}
+            period = game.get("periodDescriptor") if isinstance(game.get("periodDescriptor"), dict) else {}
             slim_rows.append(
                 {
                     "id": game.get("id"),
@@ -165,6 +167,14 @@ def _export_games(season: str, start: dt.date, end: dt.date) -> dict[str, Any]:
                     "league": game.get("league") or "NHL",
                     "state": str(game.get("gameState") or "").upper(),
                     "status": game.get("statusText") or "",
+                    "clock": {
+                        "timeRemaining": clock.get("timeRemaining") or clock.get("time") or "",
+                        "inIntermission": bool(clock.get("inIntermission")),
+                    },
+                    "periodDescriptor": {
+                        "number": period.get("number"),
+                        "periodType": period.get("periodType") or "",
+                    },
                     "stage": game.get("displayStage") or "",
                     "startUtc": game.get("startTimeUTC") or "",
                     "away": {

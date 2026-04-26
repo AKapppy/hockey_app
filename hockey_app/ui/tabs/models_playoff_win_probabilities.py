@@ -1,13 +1,18 @@
 from __future__ import annotations
 
-import math
 import tkinter as tk
 from tkinter import font as tkfont
 from typing import Any, Callable
 
-from hockey_app.ui.tabs.models_data import load_points_history, points_snapshot, standings_tiebreak_snapshot
+from hockey_app.ui.tabs.models_data import load_points_history, points_snapshot, regular_season_reference_day, standings_tiebreak_snapshot
 from hockey_app.ui.tabs.models_logos import get_model_logo
-from hockey_app.ui.tabs.models_playoff_picture import _bracket_snapshot, _series_score_snapshot
+from hockey_app.ui.tabs.models_playoff_math import (
+    best_of_7_lengths_from_score as _shared_best_of_7_lengths_from_score,
+    live_playoff_series_probabilities,
+    series_probability_table,
+    team_strength_snapshot,
+)
+from hockey_app.ui.tabs.models_playoff_picture import _bracket_snapshot, _series_score_snapshot, playoff_status_map
 
 
 def _blend(a: str, b: str, t: float) -> str:
@@ -34,105 +39,35 @@ def _heat_rank01(t: float) -> str:
     return _blend(c, "#262626", 0.42)
 
 
-def _series_win_prob(a_pts: float, b_pts: float) -> float:
-    d = (a_pts - b_pts) / 8.0
-    return max(0.08, min(0.92, 1.0 / (1.0 + math.exp(-d))))
-
-
-def _ncr(n: int, r: int) -> float:
-    if r < 0 or r > n:
-        return 0.0
-    return float(math.comb(n, r))
-
-
-def _best_of_7_lengths(p: float) -> tuple[float, float, float, float]:
-    # Exact first-to-4 probabilities (stop when a team reaches 4 wins).
-    p = max(0.001, min(0.999, float(p)))
-    q = 1.0 - p
-    in4 = p**4
-    in5 = _ncr(4, 1) * (p**4) * (q**1)
-    in6 = _ncr(5, 2) * (p**4) * (q**2)
-    in7 = _ncr(6, 3) * (p**4) * (q**3)
-    return (in4, in5, in6, in7)
-
-
 def _best_of_7_lengths_from_score(
     p: float,
     wins_for: int,
     wins_against: int,
 ) -> tuple[float, float, float, float]:
-    p = max(0.001, min(0.999, float(p)))
-    q = 1.0 - p
-    wf = max(0, int(wins_for))
-    wa = max(0, int(wins_against))
-    played = wf + wa
-
-    if wf >= 4:
-        return tuple(1.0 if total == played else 0.0 for total in range(4, 8))  # type: ignore[return-value]
-    if wa >= 4:
-        return (0.0, 0.0, 0.0, 0.0)
-
-    out: list[float] = []
-    wins_needed = 4 - wf
-    for total_games in range(4, 8):
-        remaining_games = total_games - played
-        if remaining_games < wins_needed or remaining_games <= 0:
-            out.append(0.0)
-            continue
-        opp_future_wins = remaining_games - wins_needed
-        if (wa + opp_future_wins) >= 4:
-            out.append(0.0)
-            continue
-        before_final = remaining_games - 1
-        needed_before_final = wins_needed - 1
-        if before_final < needed_before_final or needed_before_final < 0:
-            out.append(0.0)
-            continue
-        prob = _ncr(before_final, needed_before_final) * (p**wins_needed) * (q**opp_future_wins)
-        out.append(prob)
-    return tuple(out)  # type: ignore[return-value]
+    return _shared_best_of_7_lengths_from_score(p, wins_for, wins_against)
 
 
 def _series_table(
     a: str,
     b: str,
-    pts: dict[str, float],
+    team_strength: dict[str, float],
     series_scores: dict[tuple[str, str], dict[str, int]] | None = None,
+    live_series_probs: dict[tuple[str, str], dict[str, Any]] | None = None,
 ) -> dict[str, object]:
-    pa = _series_win_prob(float(pts.get(a, 0.0)), float(pts.get(b, 0.0)))
-    wins = (series_scores or {}).get(tuple(sorted((a, b))), {})
-    a_wins = int(wins.get(a, 0))
-    b_wins = int(wins.get(b, 0))
-    a4, a5, a6, a7 = _best_of_7_lengths_from_score(pa, a_wins, b_wins)
-    b4, b5, b6, b7 = _best_of_7_lengths_from_score(1.0 - pa, b_wins, a_wins)
-    a_win = a4 + a5 + a6 + a7
-    b_win = b4 + b5 + b6 + b7
-
-    outcomes = [
-        (a, 4, a4), (a, 5, a5), (a, 6, a6), (a, 7, a7),
-        (b, 4, b4), (b, 5, b5), (b, 6, b6), (b, 7, b7),
-    ]
-    pred_team, pred_len, pred_p = max(outcomes, key=lambda x: x[2])
-
-    return {
-        "a": a,
-        "b": b,
-        "a_probs": (a4, a5, a6, a7),
-        "b_probs": (b4, b5, b6, b7),
-        "a_win": a_win,
-        "b_win": b_win,
-        "pred": f"{pred_team} in {pred_len}",
-        "winner": pred_team,
-        "pred_p": pred_p,
-        "a_wins": a_wins,
-        "b_wins": b_wins,
-    }
+    return series_probability_table(
+        a,
+        b,
+        team_strength=team_strength,
+        series_scores=series_scores,
+        live_series_probs=live_series_probs,
+    )
 
 
 def _pairwise(
     teams: list[str],
-    pts: dict[str, float],
+    team_strength: dict[str, float],
     series_scores: dict[tuple[str, str], dict[str, int]] | None = None,
+    live_series_probs: dict[tuple[str, str], dict[str, Any]] | None = None,
 ) -> tuple[list[dict[str, object]], list[str]]:
     rows: list[dict[str, object]] = []
     winners: list[str] = []
@@ -141,7 +76,7 @@ def _pairwise(
         b = teams[i + 1] if i + 1 < len(teams) else ""
         if not a or not b:
             continue
-        info = _series_table(a, b, pts, series_scores)
+        info = _series_table(a, b, team_strength, series_scores, live_series_probs)
         rows.append(info)
         winners.append(str(info["winner"]))
     return rows, winners
@@ -157,7 +92,8 @@ def populate_playoff_win_probabilities_tab(
         child.destroy()
 
     df, _d0, d1 = load_points_history(league=league)
-    pts = points_snapshot(df, d1)
+    seed_day = regular_season_reference_day(d1, league=str(league or "NHL").upper())
+    pts = points_snapshot(df, seed_day)
 
     root = tk.Frame(parent, bg="#262626")
     root.pack(fill="both", expand=True)
@@ -204,26 +140,29 @@ def populate_playoff_win_probabilities_tab(
 
         return {"redraw": redraw, "reset": reset}
 
-    standings = standings_tiebreak_snapshot(d1) if str(league or "NHL").upper() == "NHL" else {}
+    standings = standings_tiebreak_snapshot(seed_day) if str(league or "NHL").upper() == "NHL" else {}
     b = _bracket_snapshot(pts, standings)
     series_scores = _series_score_snapshot(d1, league=str(league or "NHL").upper())
+    status_map = playoff_status_map(d1, pts, standings, league=str(league or "NHL").upper(), series_scores=series_scores)
+    team_strength = team_strength_snapshot(d1, league=str(league or "NHL").upper())
+    live_series_probs = live_playoff_series_probabilities(d1, league=str(league or "NHL").upper())
     west_r1 = [t for t in b.get("West_R1", []) if t]
     east_r1 = [t for t in b.get("East_R1", []) if t]
 
     rounds: list[tuple[str, list[dict[str, object]]]] = []
-    r1_w, w_winners = _pairwise(west_r1, pts, series_scores)
-    r1_e, e_winners = _pairwise(east_r1, pts, series_scores)
+    r1_w, w_winners = _pairwise(west_r1, team_strength, series_scores, live_series_probs)
+    r1_e, e_winners = _pairwise(east_r1, team_strength, series_scores, live_series_probs)
     rounds.append(("Round 1", r1_w + r1_e))
-    r2_w, w2 = _pairwise(w_winners, pts, series_scores)
-    r2_e, e2 = _pairwise(e_winners, pts, series_scores)
+    r2_w, w2 = _pairwise(w_winners, team_strength, series_scores, live_series_probs)
+    r2_e, e2 = _pairwise(e_winners, team_strength, series_scores, live_series_probs)
     if r2_w or r2_e:
         rounds.append(("Round 2", r2_w + r2_e))
-    cf_w, w3 = _pairwise(w2, pts, series_scores)
-    cf_e, e3 = _pairwise(e2, pts, series_scores)
+    cf_w, w3 = _pairwise(w2, team_strength, series_scores, live_series_probs)
+    cf_e, e3 = _pairwise(e2, team_strength, series_scores, live_series_probs)
     cf = cf_w + cf_e
     if cf:
         rounds.append(("Conference Finals", cf))
-    cup, _ = _pairwise(w3 + e3, pts, series_scores)
+    cup, _ = _pairwise(w3 + e3, team_strength, series_scores, live_series_probs)
     if cup:
         rounds.append(("Stanley Cup Final", cup))
 
@@ -300,13 +239,15 @@ def populate_playoff_win_probabilities_tab(
             a4, a5, a6, a7 = sr["a_probs"]  # type: ignore[misc]
             b4, b5, b6, b7 = sr["b_probs"]  # type: ignore[misc]
             pred = str(sr["pred"])
+            a_elim = status_map.get(a) == "eliminated"
+            b_elim = status_map.get(b2) == "eliminated"
 
             top_y = y_loc
             c.create_rectangle(x_base, top_y, x_base + cols[0][1], top_y + row_h * 2, fill="#2a2a2a", outline="#3a3a3a")
             series_x0 = x_base
             series_w = cols[0][1]
-            a_logo = get_model_logo(a, height=max(18, int(row_h * 0.9)), logo_bank=logo_bank, league=league, master=c)
-            b_logo = get_model_logo(b2, height=max(18, int(row_h * 0.9)), logo_bank=logo_bank, league=league, master=c)
+            a_logo = get_model_logo(a, height=max(18, int(row_h * 0.9)), logo_bank=logo_bank, league=league, master=c, dim=a_elim)
+            b_logo = get_model_logo(b2, height=max(18, int(row_h * 0.9)), logo_bank=logo_bank, league=league, master=c, dim=b_elim)
             if a_logo is not None and b_logo is not None:
                 live_imgs.extend((a_logo, b_logo))
                 gap = 10
@@ -328,35 +269,38 @@ def populate_playoff_win_probabilities_tab(
             c.create_text(pred_x0 + pred_w / 2, top_y + row_h, text=pred, fill="#f0f0f0", anchor="center", font=cell_font)
 
             row_defs = [
-                (a, (a4, a5, a6, a7), top_y),
-                (b2, (b4, b5, b6, b7), top_y + row_h),
+                (a, (a4, a5, a6, a7), top_y, a_elim),
+                (b2, (b4, b5, b6, b7), top_y + row_h, b_elim),
             ]
             series_vals = [a4, a5, a6, a7, b4, b5, b6, b7]
             series_max = max(series_vals) if series_vals else 0.0
 
-            for team, probs, ry in row_defs:
+            for team, probs, ry, eliminated in row_defs:
                 p4, p5, p6, p7 = probs
                 tx0 = x_base + cols[0][1]
-                c.create_rectangle(tx0, ry, tx0 + cols[1][1], ry + row_h, fill="#2a2a2a", outline="#3a3a3a")
+                team_fill = "#3a3a3a" if eliminated else "#2a2a2a"
+                text_fill = "#9e9e9e" if eliminated else "#f0f0f0"
+                c.create_rectangle(tx0, ry, tx0 + cols[1][1], ry + row_h, fill=team_fill, outline="#3a3a3a")
                 img = get_model_logo(
                     team,
                     height=20,
                     logo_bank=logo_bank,
                     league=league,
                     master=c,
+                    dim=eliminated,
                 )
                 if img is not None:
                     live_imgs.append(img)
                     c.create_image(tx0 + cols[1][1] / 2, ry + row_h / 2, image=img, anchor="center")
                 else:
-                    c.create_text(tx0 + cols[1][1] / 2, ry + row_h / 2, text=team, fill="#f0f0f0", anchor="center", font=cell_font)
+                    c.create_text(tx0 + cols[1][1] / 2, ry + row_h / 2, text=team, fill=text_fill, anchor="center", font=cell_font)
 
                 x2 = tx0 + cols[1][1]
                 for val, (_name, w) in zip((p4, p5, p6, p7), cols[2:6]):
                     impossible = val <= 0.0
-                    fill = "#353535" if impossible else (_heat_rank01(val / series_max) if series_max > 0 else _heat_rank01(0.0))
+                    fill = "#3a3a3a" if eliminated else ("#353535" if impossible else (_heat_rank01(val / series_max) if series_max > 0 else _heat_rank01(0.0)))
                     c.create_rectangle(x2, ry, x2 + w, ry + row_h, fill=fill, outline="#3a3a3a")
-                    txt_fill = "#9a9a9a" if impossible else "#f0f0f0"
+                    txt_fill = "#888888" if eliminated else ("#9a9a9a" if impossible else "#f0f0f0")
                     c.create_text(x2 + w / 2, ry + row_h / 2, text=pct_txt(val), fill=txt_fill, anchor="center", font=cell_font)
                     x2 += w
             y_loc += row_h * 2

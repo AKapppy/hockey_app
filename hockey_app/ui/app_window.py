@@ -821,6 +821,7 @@ def launch_predictions_ui_window(
             dark_window_bg=dark_window_bg,
             dark_canvas_bg=dark_canvas_bg,
             dark_hilite=dark_hilite,
+            on_data_refresh=_on_scoreboard_data_refresh,
         )
         stats_loaded["scoreboard"] = True
 
@@ -1086,6 +1087,43 @@ def launch_predictions_ui_window(
             controllers.pop(str(scaffold.point_probabilities_tab), None)
         if scaffold.playoff_win_probabilities_tab is not None:
             controllers.pop(str(scaffold.playoff_win_probabilities_tab), None)
+
+    def _on_scoreboard_data_refresh() -> None:
+        # Scoreboard refreshes can change same-day standings/model inputs when a
+        # game finishes while the app is open, so remount dependent tabs on the
+        # next visit and immediately reload whichever affected tab is visible.
+        for key in ("points", "goal_diff", "playoff_picture", "magic_tragic", "point_probabilities", "playoff_win_probabilities"):
+            stats_loaded[key] = False
+        for holder in (
+            scaffold.points_holder,
+            scaffold.goal_diff_holder,
+            scaffold.playoff_picture_holder,
+            scaffold.magic_tragic_holder,
+            scaffold.point_probabilities_holder,
+            scaffold.playoff_win_probabilities_holder,
+        ):
+            if holder is None:
+                continue
+            for child in holder.winfo_children():
+                child.destroy()
+        for tab in (
+            scaffold.points_tab,
+            scaffold.goal_diff_tab,
+            scaffold.playoff_picture_tab,
+            scaffold.magic_tragic_tab,
+            scaffold.point_probabilities_tab,
+            scaffold.playoff_win_probabilities_tab,
+        ):
+            if tab is not None:
+                controllers.pop(str(tab), None)
+        try:
+            selected = scaffold.main_notebook.select()
+        except Exception:
+            selected = None
+        if selected == str(scaffold.stats_page):
+            _ensure_stats_tab_loaded()
+        elif selected == str(scaffold.models_page):
+            _ensure_models_tab_loaded()
 
     def _toggle_stats_league() -> None:
         cur = str(app_state.get("stats_league", "NHL")).upper()

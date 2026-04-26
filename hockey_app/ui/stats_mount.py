@@ -19,6 +19,7 @@ def mount_games_tab(
     dark_window_bg: str,
     dark_canvas_bg: str,
     dark_hilite: str,
+    on_data_refresh: Callable[[], None] | None = None,
 ) -> None:
     populate_games_tab(
         games_holder,
@@ -27,6 +28,7 @@ def mount_games_tab(
         bg=dark_window_bg,
         card_bg=dark_canvas_bg,
         accent=dark_hilite,
+        on_data_refresh=on_data_refresh,
     )
 
 

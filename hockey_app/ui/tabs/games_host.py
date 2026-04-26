@@ -20,6 +20,7 @@ def populate_games_tab(
     bg: str,
     card_bg: str,
     accent: str,
+    on_data_refresh=None,
 ) -> None:
     """
     Legacy adapter: mount the modern Games-tab renderer inside the legacy shell.
@@ -46,6 +47,7 @@ def populate_games_tab(
         "season_end": END_DATE,
         "season_probe_date": SEASON_PROBE_DATE,
         "timezone": TIMEZONE,
+        "on_data_refresh": on_data_refresh,
     }
     view = build_games_tab(parent, ctx)
     view.pack(fill="both", expand=True)

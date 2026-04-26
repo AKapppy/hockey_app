@@ -42,6 +42,21 @@ def _is_extra_time(g: dict[str, Any]) -> bool:
     return lp in {"OT", "SO"}
 
 
+def _is_nhl_regular_season_game(g: dict[str, Any]) -> bool:
+    gt = g.get("gameType") or g.get("gameTypeId") or g.get("gameTypeCode")
+    gt_txt = str(gt or "").strip().upper()
+    if gt_txt in {"2", "R"}:
+        return True
+    if gt_txt in {"3", "P"}:
+        return False
+    gid = str(g.get("id") or g.get("gameId") or "").strip()
+    if gid.startswith("202502"):
+        return True
+    if gid.startswith("202503"):
+        return False
+    return False
+
+
 def _points_from_game_result(result: str, *, league: str) -> int:
     code = str(result or "").upper().strip()
     if not code:
@@ -160,6 +175,10 @@ def _build_points_df(api: NHLApi, start: dt.date, end: dt.date) -> tuple[pd.Data
         for g in games:
             gid = int(g.get("id") or g.get("gameId") or 0)
             if gid and gid in seen_games:
+                continue
+            if not _is_nhl_regular_season_game(g):
+                if gid:
+                    seen_games.add(gid)
                 continue
             if not _is_final(g):
                 continue
@@ -340,7 +359,7 @@ def populate_points_tab(
             df = xml_df.copy()
             original_order = [str(x) for x in list(df.index)]
         else:
-            cached_payload = cache.get_json(key, ttl_s=600)
+            cached_payload = cache.get_json(key, ttl_s=600) if end < real_today else None
             parsed = _df_from_payload(cached_payload) if isinstance(cached_payload, dict) else None
             if parsed is not None:
                 df, original_order = parsed
@@ -371,7 +390,7 @@ def populate_points_tab(
             df = xml_df.copy()
             original_order = [str(x) for x in list(df.index)]
         else:
-            cached_payload = cache.get_json(key, ttl_s=600)
+            cached_payload = cache.get_json(key, ttl_s=600) if end < real_today else None
             parsed = _df_from_payload(cached_payload) if isinstance(cached_payload, dict) else None
             if parsed is not None:
                 df, original_order = parsed

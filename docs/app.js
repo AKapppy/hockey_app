@@ -435,11 +435,56 @@
     `;
   }
 
+  function periodSuffix(value) {
+    const num = Number(value);
+    if (!Number.isFinite(num) || num <= 0) return "";
+    if (num % 100 >= 11 && num % 100 <= 13) return `${num}TH`;
+    return `${num}${{ 1: "ST", 2: "ND", 3: "RD" }[num % 10] || "TH"}`;
+  }
+
+  function scoreboardStatus(game) {
+    const state = String(game.state || "").toUpperCase();
+    const status = String(game.status || "").trim();
+    const clock = game.clock || {};
+    const period = game.periodDescriptor || {};
+    const timeRemaining = String(clock.timeRemaining || clock.time || "").trim();
+    const inIntermission = Boolean(clock.inIntermission);
+    const periodType = String(period.periodType || "").toUpperCase().trim();
+    const periodNumber = Number(period.number);
+
+    if (state === "FINAL" || state === "OFF" || state.startsWith("FINAL")) {
+      if (periodType === "OT" || periodType === "SO") return `FINAL - ${periodType}`;
+      return status || "FINAL";
+    }
+
+    if (state === "LIVE" || state === "CRIT") {
+      if (periodType === "OT" || periodType === "SO") {
+        if (inIntermission) return `${periodType} INTERMISSION`;
+        if (timeRemaining) return `${periodType} - ${timeRemaining}`;
+        return periodType || status || "LIVE";
+      }
+      if (Number.isFinite(periodNumber) && periodNumber > 0) {
+        const label = periodSuffix(periodNumber);
+        if (inIntermission) return `${label} INTERMISSION`;
+        if (timeRemaining) return `${label} - ${timeRemaining}`;
+        return `${label} PERIOD`;
+      }
+      if (timeRemaining) return timeRemaining;
+    }
+
+    return status || state || "";
+  }
+
+  function scoreboardShotsLabel(team) {
+    const shots = Number(team && team.shots);
+    return Number.isFinite(shots) ? `SOG ${shots}` : "";
+  }
+
   function renderGameCard(game) {
-    const status = game.status || game.state || "";
+    const status = scoreboardStatus(game);
     return `
       <article class="game-card">
-        <div class="game-meta"><span>${esc(game.league || "NHL")}</span><span>${esc(status)}</span></div>
+        <div class="game-meta"><span>${esc(game.league || "NHL")}</span><span class="game-meta-status">${esc(status)}</span></div>
         ${renderGameTeam(game.away)}
         ${renderGameTeam(game.home)}
       </article>
@@ -449,10 +494,14 @@
   function renderGameTeam(team) {
     const code = team.code || "";
     const score = team.score ?? "";
+    const shots = scoreboardShotsLabel(team);
     return `
       <div class="game-team" data-team="${esc(code)}">
         <img src="${esc(logo(code))}" alt="">
-        <span>${esc(code)}</span>
+        <div class="game-team-main">
+          <span>${esc(code)}</span>
+          <span class="game-team-shots">${esc(shots)}</span>
+        </div>
         <strong>${esc(score)}</strong>
       </div>
     `;
@@ -863,28 +912,48 @@
     if (!a && !b) return "";
     if (a && !b) return a;
     if (b && !a) return b;
+    return pickBracketWinnerWithScores(a, b, pts, {});
+  }
+
+  function seriesWins(a, b, seriesScores) {
+    if (!a || !b) return [0, 0];
+    const key = [a, b].sort().join("|");
+    const wins = (seriesScores && seriesScores[key]) || {};
+    return [Number(wins[a] || 0), Number(wins[b] || 0)];
+  }
+
+  function pickBracketWinnerWithScores(a, b, pts, seriesScores) {
+    if (!a && !b) return "";
+    if (a && !b) return a;
+    if (b && !a) return b;
+    const [aWins, bWins] = seriesWins(a, b, seriesScores);
+    if (aWins >= 4 || bWins >= 4) {
+      if (aWins === bWins) return String(a) <= String(b) ? a : b;
+      return aWins > bWins ? a : b;
+    }
+    if ((aWins + bWins) > 0) return "";
     const pa = Number(pts[a] || 0);
     const pb = Number(pts[b] || 0);
     if (pa === pb) return String(a) <= String(b) ? a : b;
     return pa > pb ? a : b;
   }
 
-  function buildConferenceBracket(teams, pts) {
+  function buildConferenceBracket(teams, pts, seriesScores) {
     const seeded = Array.from({ length: 8 }, (_, idx) => teams[idx] || "");
     const round1 = [];
     for (let i = 0; i < seeded.length; i += 2) {
       round1.push([seeded[i], seeded[i + 1]]);
     }
     const round2 = [
-      [pickBracketWinner(...round1[0], pts), pickBracketWinner(...round1[1], pts)],
-      [pickBracketWinner(...round1[2], pts), pickBracketWinner(...round1[3], pts)],
+      [pickBracketWinnerWithScores(...round1[0], pts, seriesScores), pickBracketWinnerWithScores(...round1[1], pts, seriesScores)],
+      [pickBracketWinnerWithScores(...round1[2], pts, seriesScores), pickBracketWinnerWithScores(...round1[3], pts, seriesScores)],
     ];
-    const final = [pickBracketWinner(...round2[0], pts), pickBracketWinner(...round2[1], pts)];
+    const final = [pickBracketWinnerWithScores(...round2[0], pts, seriesScores), pickBracketWinnerWithScores(...round2[1], pts, seriesScores)];
     return {
       round1,
       round2,
       final,
-      champion: pickBracketWinner(final[0], final[1], pts),
+      champion: pickBracketWinnerWithScores(final[0], final[1], pts, seriesScores),
     };
   }
 
@@ -947,7 +1016,7 @@
   function renderBracketSeriesCard(a, b, pts, seriesScores, kind = "") {
     const codes = [a, b].filter(Boolean).sort();
     const wins = codes.length === 2 ? (seriesScores[codes.join("|")] || {}) : {};
-    const winner = pickBracketWinner(a, b, pts);
+    const winner = pickBracketWinnerWithScores(a, b, pts, seriesScores);
     return `
       <article class="bracket-series ${esc(kind)} ${!a && !b ? "is-empty" : ""}">
         ${renderBracketTeamLine(a, pts, wins, winner)}
@@ -983,7 +1052,7 @@
   }
 
   function renderCupColumn(westChampion, eastChampion, pts, seriesScores) {
-    const winner = pickBracketWinner(westChampion, eastChampion, pts);
+    const winner = pickBracketWinnerWithScores(westChampion, eastChampion, pts, seriesScores);
     return `
       <section class="cup-column">
         <div class="round-label">Stanley Cup Final</div>
@@ -1005,8 +1074,8 @@
     const pts = pointsSnapshot();
     const cols = playoffColumns(pts);
     const seriesScores = playoffSeriesScoresByDay(currentModelDay());
-    const westBracket = buildConferenceBracket(conferenceBracketTeams(pts, "Pacific", "Central", "WestWC"), pts);
-    const eastBracket = buildConferenceBracket(conferenceBracketTeams(pts, "Atlantic", "Metro", "EastWC"), pts);
+    const westBracket = buildConferenceBracket(conferenceBracketTeams(pts, "Pacific", "Central", "WestWC"), pts, seriesScores);
+    const eastBracket = buildConferenceBracket(conferenceBracketTeams(pts, "Atlantic", "Metro", "EastWC"), pts, seriesScores);
     return `
       <div class="model-page page-fill playoff-page">
         ${renderModelStepper()}

@@ -59,7 +59,7 @@ def load_points_history(league: str = "NHL") -> tuple[pd.DataFrame, dt.date, dt.
     df = read_table_xml(season=SEASON, lump="points_history", league=league_u) if d1 < real_today else None
     if df is not None and (df.empty or len(df.columns) == 0 or str(df.columns[-1]) != expected_last_col):
         df = None
-    if df is None:
+    if df is None and d1 < real_today:
         payload = cache.get_json(key, ttl_s=600)
         if isinstance(payload, dict):
             try:
@@ -129,6 +129,22 @@ def points_snapshot(df: pd.DataFrame, day: dt.date) -> dict[str, float]:
         col = str(df.columns[-1])
     s = pd.to_numeric(df[col], errors="coerce")
     return {str(i): float(s.loc[i]) for i in s.index if not pd.isna(s.loc[i])}
+
+
+def regular_season_reference_day(day: dt.date, *, league: str = "NHL") -> dt.date:
+    league_u = str(league or "NHL").upper()
+    if league_u != "NHL":
+        return day
+    cache = DiskCache(nhl_dir(SEASON))
+    api = NHLApi(cache)
+    try:
+        bounds = api.get_season_boundaries(day)
+    except Exception:
+        return day
+    regular_end = bounds.regular_end
+    if isinstance(regular_end, dt.date) and day > regular_end:
+        return regular_end
+    return day
 
 
 def standings_tiebreak_snapshot(day: dt.date) -> dict[str, dict[str, Any]]:

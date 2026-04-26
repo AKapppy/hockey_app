@@ -767,6 +767,196 @@ def _shots(g: dict[str, Any]) -> tuple[Optional[int], Optional[int]]:
     return _team_shots(away if isinstance(away, dict) else {}), _team_shots(home if isinstance(home, dict) else {})
 
 
+def _team_shots_from_stat_rows(rows: Any) -> Optional[int]:
+    for row in _as_list(rows):
+        if not isinstance(row, dict):
+            continue
+        name = str(
+            row.get("name")
+            or row.get("label")
+            or row.get("abbreviation")
+            or row.get("key")
+            or ""
+        ).strip().lower()
+        if name not in {"shots on goal", "shots", "sog", "shotsongoal"}:
+            continue
+        value = row.get("value")
+        if value in (None, ""):
+            value = row.get("displayValue")
+        shots = _to_int(value, default=-1)
+        if shots >= 0:
+            return shots
+    return None
+
+
+def _team_shots_from_blob(blob: Any) -> Optional[int]:
+    data = _as_dict(blob)
+    if not data:
+        return None
+    for key in ("shotsOnGoal", "shots", "sog", "shotsTotal", "shots_total", "shotTotals"):
+        if key in data and data.get(key) is not None:
+            shots = _to_int(data.get(key), default=-1)
+            if shots >= 0:
+                return shots
+    stats_dict = _as_dict(data.get("teamStats"))
+    for key in ("shotsOnGoal", "shots", "sog", "shotsTotal", "shots_total", "shotTotals"):
+        if key in stats_dict and stats_dict.get(key) is not None:
+            shots = _to_int(stats_dict.get(key), default=-1)
+            if shots >= 0:
+                return shots
+    shots = _team_shots_from_stat_rows(data.get("statistics"))
+    if shots is not None:
+        return shots
+    for key in ("summary", "totals"):
+        nested = _as_dict(data.get(key))
+        if nested:
+            shots = _team_shots_from_blob(nested)
+            if shots is not None:
+                return shots
+    return None
+
+
+def _pbp_play_team_code(
+    play: dict[str, Any],
+    *,
+    away_code: str,
+    home_code: str,
+    away_id: int,
+    home_id: int,
+) -> str:
+    details = _as_dict(play.get("details"))
+    owner_id = _to_int(details.get("eventOwnerTeamId") or 0, default=0)
+    if owner_id > 0:
+        if away_id > 0 and owner_id == away_id:
+            return away_code
+        if home_id > 0 and owner_id == home_id:
+            return home_code
+    team = _as_dict(play.get("team"))
+    code = _norm_abbrev(
+        team.get("abbrev")
+        or team.get("abbreviation")
+        or team.get("shortDisplayName")
+        or team.get("displayName"),
+        fallback="",
+    ).upper()
+    if code in {away_code, home_code}:
+        return code
+    return ""
+
+
+def _pbp_shot_totals(
+    game: dict[str, Any],
+    pbp: dict[str, Any],
+) -> tuple[Optional[int], Optional[int]]:
+    away_code, home_code = _game_codes(game)
+    if not away_code or not home_code:
+        return None, None
+    away_id = _to_int(_as_dict(pbp.get("awayTeam")).get("id") or 0, default=0)
+    home_id = _to_int(_as_dict(pbp.get("homeTeam")).get("id") or 0, default=0)
+    plays = _as_list(pbp.get("plays"))
+    if not plays:
+        return None, None
+    totals = {away_code: 0, home_code: 0}
+    for play in plays:
+        if not isinstance(play, dict):
+            continue
+        type_u = str(play.get("typeDescKey") or play.get("typeCode") or "").strip().lower()
+        if type_u not in {"shot-on-goal", "goal"}:
+            continue
+        team_code = _pbp_play_team_code(
+            play,
+            away_code=away_code,
+            home_code=home_code,
+            away_id=away_id,
+            home_id=home_id,
+        )
+        if team_code in totals:
+            totals[team_code] += 1
+    return totals.get(away_code), totals.get(home_code)
+
+
+def _pbp_live_snapshot(pbp: dict[str, Any]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    game_state = str(pbp.get("gameState") or "").upper().strip()
+    if game_state:
+        out["gameState"] = game_state
+    top_period = _as_dict(pbp.get("periodDescriptor"))
+    top_clock = _as_dict(pbp.get("clock"))
+    clock_remaining = str(top_clock.get("timeRemaining") or top_clock.get("time") or "").strip()
+    if top_period:
+        out["periodDescriptor"] = dict(top_period)
+    if clock_remaining or bool(top_clock.get("inIntermission")):
+        clock_obj: dict[str, Any] = {}
+        if clock_remaining:
+            clock_obj["timeRemaining"] = clock_remaining
+        if bool(top_clock.get("inIntermission")):
+            clock_obj["inIntermission"] = True
+        out["clock"] = clock_obj
+    if out.get("periodDescriptor") and out.get("clock"):
+        return out
+    for play in reversed(_as_list(pbp.get("plays"))):
+        if not isinstance(play, dict):
+            continue
+        play_period = _as_dict(play.get("periodDescriptor"))
+        play_clock = str(play.get("timeRemaining") or "").strip()
+        if play_period and "periodDescriptor" not in out:
+            out["periodDescriptor"] = dict(play_period)
+        if play_clock and "clock" not in out:
+            out["clock"] = {"timeRemaining": play_clock}
+        if out.get("periodDescriptor") and out.get("clock"):
+            break
+    return out
+
+
+def _promote_live_game_row_from_gamecenter(
+    game: dict[str, Any],
+    *,
+    boxscore: Optional[dict[str, Any]] = None,
+    pbp: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    if not isinstance(game, dict):
+        return game
+    out = dict(game)
+    away = dict(_as_dict(out.get("awayTeam")))
+    home = dict(_as_dict(out.get("homeTeam")))
+    if away:
+        out["awayTeam"] = away
+    if home:
+        out["homeTeam"] = home
+
+    if isinstance(boxscore, dict):
+        pstats = _as_dict(boxscore.get("playerByGameStats"))
+        away_shots = _team_shots_from_blob(_as_dict(boxscore.get("awayTeam")))
+        if away_shots is None:
+            away_shots = _team_shots_from_blob(_as_dict(pstats.get("awayTeam")))
+        home_shots = _team_shots_from_blob(_as_dict(boxscore.get("homeTeam")))
+        if home_shots is None:
+            home_shots = _team_shots_from_blob(_as_dict(pstats.get("homeTeam")))
+        if away_shots is not None:
+            away["shotsOnGoal"] = away_shots
+        if home_shots is not None:
+            home["shotsOnGoal"] = home_shots
+
+    if isinstance(pbp, dict):
+        snap = _pbp_live_snapshot(pbp)
+        state = str(snap.get("gameState") or "").upper().strip()
+        if state:
+            out["gameState"] = state
+        period = _as_dict(snap.get("periodDescriptor"))
+        if period:
+            out["periodDescriptor"] = period
+        clock = _as_dict(snap.get("clock"))
+        if clock:
+            out["clock"] = clock
+        away_pbp_shots, home_pbp_shots = _pbp_shot_totals(out, pbp)
+        if away.get("shotsOnGoal") is None and away_pbp_shots is not None:
+            away["shotsOnGoal"] = away_pbp_shots
+        if home.get("shotsOnGoal") is None and home_pbp_shots is not None:
+            home["shotsOnGoal"] = home_pbp_shots
+
+    return out
+
+
 def _parse_start_local(g: dict[str, Any], tz: ZoneInfo) -> Optional[dt.datetime]:
     s = g.get("startTimeUTC") or g.get("startTime") or None
     if not s:
@@ -2154,6 +2344,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
     season_start: dt.date = ctx.get("season_start", dt.date(dt.date.today().year, 10, 1))
     season_end: dt.date = ctx.get("season_end", dt.date.today())
     season_probe_date: dt.date = ctx.get("season_probe_date", season_end)
+    on_data_refresh = ctx.get("on_data_refresh")
 
     tz_name = ctx.get("timezone", "America/New_York")
     tz = ZoneInfo(str(tz_name))
@@ -6665,6 +6856,8 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
         away_code, home_code = _game_codes(row)
         away = _as_dict(row.get("awayTeam"))
         home = _as_dict(row.get("homeTeam"))
+        clock = _as_dict(row.get("clock"))
+        pd = _as_dict(row.get("periodDescriptor"))
         return (
             _game_state(row),
             away_code,
@@ -6672,6 +6865,13 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             _to_int(away.get("score") or 0, default=0),
             _to_int(home.get("score") or 0, default=0),
             str(row.get("startTimeUTC") or row.get("startTime") or "").strip(),
+            str(row.get("statusText") or "").strip(),
+            str(clock.get("timeRemaining") or clock.get("time") or "").strip(),
+            "1" if bool(clock.get("inIntermission")) else "0",
+            str(pd.get("number") or "").strip(),
+            str(pd.get("periodType") or "").strip().upper(),
+            _to_int(away.get("shotsOnGoal") or away.get("shots") or away.get("sog") or 0, default=-1),
+            _to_int(home.get("shotsOnGoal") or home.get("shots") or home.get("sog") or 0, default=-1),
         )
 
     def _nhl_day_needs_reconcile(
@@ -8041,9 +8241,18 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
         # NHL feed may include Olympics; if we can load Olympics from ESPN, prefer that source.
         nhl_olympic = [g for g in nhl_games if _is_olympic_game(g)]
         nhl_regular = [g for g in nhl_games if not _is_olympic_game(g)]
+        promoted_nhl_regular: list[dict[str, Any]] = []
         for g in nhl_regular:
-            g["league"] = "NHL"
-            g["_fetched_at"] = nhl_stamp
+            gid = _to_int(g.get("id") or g.get("gameId") or 0, default=0)
+            promoted = _promote_live_game_row_from_gamecenter(
+                g,
+                boxscore=_load_cached_boxscore(gid),
+                pbp=_load_cached_pbp(gid),
+            ) if gid > 0 else g
+            promoted["league"] = "NHL"
+            promoted["_fetched_at"] = nhl_stamp
+            promoted_nhl_regular.append(promoted)
+        nhl_regular = promoted_nhl_regular
 
         # External refresh policy:
         # - today: refresh only if cached games include started + non-final
@@ -8550,6 +8759,11 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                 refresh_inflight = False
                 refresh_status_var.set(msg)
                 _render_day(force_rebuild=False)
+                if callable(on_data_refresh):
+                    try:
+                        on_data_refresh()
+                    except Exception:
+                        pass
 
             try:
                 bgroot.after(0, _done)

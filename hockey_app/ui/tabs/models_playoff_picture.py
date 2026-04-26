@@ -9,11 +9,19 @@ from typing import Any, Callable
 from hockey_app.config import SEASON, TEAM_NAMES, TEAM_TO_CONF, TEAM_TO_DIV
 from hockey_app.data.paths import cache_dir
 from hockey_app.ui.tabs.models_data import (
+    games_played_snapshot,
     load_points_history,
     points_snapshot,
+    regular_season_reference_day,
     standings_tiebreak_snapshot,
 )
 from hockey_app.ui.tabs.models_logos import get_model_logo
+from hockey_app.ui.tabs.models_playoff_math import (
+    live_playoff_series_probabilities,
+    pick_series_winner,
+    series_key,
+    team_strength_snapshot,
+)
 
 
 def _to_int(value: Any, default: int = 0) -> int:
@@ -175,10 +183,52 @@ def _bracket_snapshot_league_1v8(
     }
 
 
-def _series_key(a: str, b: str) -> tuple[str, str]:
-    aa = str(a or "").upper().strip()
-    bb = str(b or "").upper().strip()
-    return (aa, bb) if aa <= bb else (bb, aa)
+def _series_wins(
+    a: str,
+    b: str,
+    series_scores: dict[tuple[str, str], dict[str, int]] | None = None,
+) -> tuple[int, int]:
+    if not a or not b:
+        return (0, 0)
+    wins = (series_scores or {}).get(series_key(a, b), {})
+    return (int(wins.get(a, 0)), int(wins.get(b, 0)))
+
+
+def _pick_bracket_winner(
+    a: str,
+    b: str,
+    pts: dict[str, float],
+    series_scores: dict[tuple[str, str], dict[str, int]] | None = None,
+    team_strength: dict[str, float] | None = None,
+    live_series_probs: dict[tuple[str, str], dict[str, Any]] | None = None,
+) -> str:
+    if not a and not b:
+        return ""
+    if a and not b:
+        return a
+    if b and not a:
+        return b
+
+    a_wins, b_wins = _series_wins(a, b, series_scores)
+    if a_wins >= 4 or b_wins >= 4:
+        if a_wins == b_wins:
+            return a if str(a) <= str(b) else b
+        return a if a_wins > b_wins else b
+
+    if team_strength:
+        return pick_series_winner(
+            a,
+            b,
+            team_strength=team_strength,
+            series_scores=series_scores,
+            live_series_probs=live_series_probs,
+        )
+
+    pa = float(pts.get(a, 0.0))
+    pb = float(pts.get(b, 0.0))
+    if pa == pb:
+        return a if str(a) <= str(b) else b
+    return a if pa > pb else b
 
 
 def _series_score_snapshot(day: dt.date, *, league: str) -> dict[tuple[str, str], dict[str, int]]:
@@ -224,11 +274,72 @@ def _series_score_snapshot(day: dt.date, *, league: str) -> dict[tuple[str, str]
             if away_score == home_score:
                 continue
             winner = away if away_score > home_score else home
-            key = _series_key(away, home)
+            key = series_key(away, home)
             bucket = out.setdefault(key, {away: 0, home: 0})
             bucket.setdefault(away, 0)
             bucket.setdefault(home, 0)
             bucket[winner] = int(bucket.get(winner, 0)) + 1
+    return out
+
+
+def playoff_status_map(
+    day: dt.date,
+    pts: dict[str, float],
+    standings: dict[str, dict[str, Any]] | None = None,
+    *,
+    league: str = "NHL",
+    series_scores: dict[tuple[str, str], dict[str, int]] | None = None,
+) -> dict[str, str]:
+    league_u = str(league or "NHL").upper()
+    if league_u != "NHL" or not pts:
+        return {}
+
+    out: dict[str, str] = {}
+    seed_day = regular_season_reference_day(day, league=league_u)
+    if day > seed_day:
+        bracket = _bracket_snapshot(pts, standings)
+        field = {
+            str(code)
+            for code in (bracket.get("West_R1", []) + bracket.get("East_R1", []))
+            if str(code or "").strip()
+        }
+        for code in pts:
+            if code not in field:
+                out[str(code)] = "eliminated"
+    else:
+        gp_map = games_played_snapshot(day, league=league_u)
+        conf_groups: dict[str, list[str]] = {"East": [], "West": []}
+        for code in pts:
+            conf = TEAM_TO_CONF.get(code)
+            if conf in conf_groups:
+                conf_groups[conf].append(str(code))
+        for conf_codes in conf_groups.values():
+            current_sorted = sorted((float(pts.get(code, 0.0)) for code in conf_codes), reverse=True)
+            if len(current_sorted) < 9:
+                continue
+            for code in conf_codes:
+                gp = max(0, min(82, int(gp_map.get(code, 0))))
+                conf_seq = int((standings or {}).get(code, {}).get("conferenceSequence") or 999)
+                if gp >= 82 and conf_seq > 8:
+                    out[str(code)] = "eliminated"
+                    continue
+                max_pts = float(pts.get(code, 0.0)) + (2.0 * float(82 - gp))
+                others = sorted((float(pts.get(other, 0.0)) for other in conf_codes if other != code), reverse=True)
+                if len(others) >= 8 and others[7] > (max_pts + 0.1):
+                    out[str(code)] = "eliminated"
+
+    for matchup in (series_scores or {}).values():
+        if not isinstance(matchup, dict):
+            continue
+        wins = {str(team): int(total) for team, total in matchup.items()}
+        if len(wins) < 2:
+            continue
+        winner, win_total = max(wins.items(), key=lambda item: item[1])
+        if int(win_total) < 4:
+            continue
+        for team, total in wins.items():
+            if team != winner and int(total) < 4:
+                out[str(team)] = "eliminated"
     return out
 
 
@@ -311,12 +422,13 @@ def populate_playoff_picture_tab(
         logos_only: bool = False,
         state_hint: str = "",
     ) -> None:
+        is_eliminated = state_hint == "eliminated"
         if not logos_only:
             fill = "#2a2a2a"
             if state_hint == "clinched":
                 fill = "#234123"
             elif state_hint == "eliminated":
-                fill = "#4a1f1f"
+                fill = "#3a3a3a"
             canvas.create_rectangle(x, y, x + w, y + h, fill=fill, outline="#3a3a3a", tags=("bracket_bg",))
         if not code:
             return
@@ -329,6 +441,7 @@ def populate_playoff_picture_tab(
             logo_bank=logo_bank,
             league=league_u,
             master=canvas,
+            dim=is_eliminated,
         )
         img = probe
         if probe is not None:
@@ -343,13 +456,15 @@ def populate_playoff_picture_tab(
                 logo_bank=logo_bank,
                 league=league_u,
                 master=canvas,
+                dim=is_eliminated,
             )
+        txt_fill = "#9e9e9e" if is_eliminated else "#f0f0f0"
         if logos_only:
             if img is not None:
                 live_imgs.append(img)
                 canvas.create_image(x + w / 2, y + h / 2, image=img, anchor="center", tags=("bracket_logo",))
             else:
-                canvas.create_text(x + w / 2, y + h / 2, text=code, fill="#f0f0f0", anchor="center", tags=("bracket_logo",))
+                canvas.create_text(x + w / 2, y + h / 2, text=code, fill=txt_fill, anchor="center", tags=("bracket_logo",))
             return
 
         if img is not None:
@@ -359,10 +474,10 @@ def populate_playoff_picture_tab(
             txt_w = 8 * len(code)
             group_w = txt_w + gap + img_w
             tx = x + max(2, (w - group_w) / 2)
-            canvas.create_text(tx, y + h / 2, text=code, fill="#f0f0f0", anchor="w", font=("TkDefaultFont", 10, "bold"), tags=("bracket_logo",))
+            canvas.create_text(tx, y + h / 2, text=code, fill=txt_fill, anchor="w", font=("TkDefaultFont", 10, "bold"), tags=("bracket_logo",))
             canvas.create_image(tx + txt_w + gap + img_w / 2, y + h / 2, image=img, anchor="center", tags=("bracket_logo",))
         else:
-            canvas.create_text(x + w / 2, y + h / 2, text=code, fill="#f0f0f0", anchor="center", font=("TkDefaultFont", 10, "bold"), tags=("bracket_logo",))
+            canvas.create_text(x + w / 2, y + h / 2, text=code, fill=txt_fill, anchor="center", font=("TkDefaultFont", 10, "bold"), tags=("bracket_logo",))
 
     def draw_presidents(
         pts: dict[str, float],
@@ -419,19 +534,6 @@ def populate_playoff_picture_tab(
                 canvas.create_line(x0, y + row_h, x0 + cw * 4, y + row_h, fill="#d0d0d0", width=2)
         return y_wc + n * row_h
 
-    def _pick_predicted_winner(a: str, b: str, pts: dict[str, float]) -> str:
-        if not a and not b:
-            return ""
-        if a and not b:
-            return a
-        if b and not a:
-            return b
-        pa = float(pts.get(a, 0.0))
-        pb = float(pts.get(b, 0.0))
-        if pa == pb:
-            return a if str(a) <= str(b) else b
-        return a if pa > pb else b
-
     def draw_side_bracket(
         x0: int,
         y0: int,
@@ -441,6 +543,8 @@ def populate_playoff_picture_tab(
         pts: dict[str, float],
         states: dict[str, str],
         series_scores: dict[tuple[str, str], dict[str, int]],
+        team_strength: dict[str, float],
+        live_series_probs: dict[tuple[str, str], dict[str, Any]],
     ) -> tuple[int, int, str]:
         row_h = 72
         intra_pair_gap = 12
@@ -477,7 +581,7 @@ def populate_playoff_picture_tab(
         def _draw_series_number(code: str, opp: str, y_center: float) -> None:
             if not code or not opp:
                 return
-            wins = series_scores.get(_series_key(code, opp), {})
+            wins = series_scores.get(series_key(code, opp), {})
             code_wins = int(wins.get(code, 0))
             opp_wins = int(wins.get(opp, 0))
             color = "#7fdc7f" if code_wins > opp_wins else "#ff7b7b" if code_wins < opp_wins else "#f0f0f0"
@@ -517,10 +621,10 @@ def populate_playoff_picture_tab(
         x_r3 = x_r2 + d * (col_w + stage_gap)
 
         r1_codes = [
-            _pick_predicted_winner(r1_pairs[0][0], r1_pairs[0][1], pts),
-            _pick_predicted_winner(r1_pairs[1][0], r1_pairs[1][1], pts),
-            _pick_predicted_winner(r1_pairs[2][0], r1_pairs[2][1], pts),
-            _pick_predicted_winner(r1_pairs[3][0], r1_pairs[3][1], pts),
+            _pick_bracket_winner(r1_pairs[0][0], r1_pairs[0][1], pts, series_scores, team_strength, live_series_probs),
+            _pick_bracket_winner(r1_pairs[1][0], r1_pairs[1][1], pts, series_scores, team_strength, live_series_probs),
+            _pick_bracket_winner(r1_pairs[2][0], r1_pairs[2][1], pts, series_scores, team_strength, live_series_probs),
+            _pick_bracket_winner(r1_pairs[3][0], r1_pairs[3][1], pts, series_scores, team_strength, live_series_probs),
         ]
         for i, code in enumerate(r1_codes):
             draw_code_cell(
@@ -544,8 +648,8 @@ def populate_playoff_picture_tab(
             _line(xj, ym, r1_center_x, ym)
 
         r2_codes = [
-            _pick_predicted_winner(r1_codes[0], r1_codes[1], pts),
-            _pick_predicted_winner(r1_codes[2], r1_codes[3], pts),
+            _pick_bracket_winner(r1_codes[0], r1_codes[1], pts, series_scores, team_strength, live_series_probs),
+            _pick_bracket_winner(r1_codes[2], r1_codes[3], pts, series_scores, team_strength, live_series_probs),
         ]
         mids2: list[float] = []
         for i, code in enumerate(r2_codes):
@@ -573,7 +677,7 @@ def populate_playoff_picture_tab(
             _line(xj, ya, xj, yb)
             _line(xj, ym, r2_center_x, ym)
 
-        r3_code = _pick_predicted_winner(r2_codes[0], r2_codes[1], pts)
+        r3_code = _pick_bracket_winner(r2_codes[0], r2_codes[1], pts, series_scores, team_strength, live_series_probs)
         sm = (mids2[0] + mids2[1]) / 2
         draw_code_cell(
             x_r3,
@@ -594,10 +698,6 @@ def populate_playoff_picture_tab(
         _line(xj, sm, r3_center_x, sm)
         return int(_edge_out(x_r3)), int(sm), r3_code
 
-    def _status_map(_pts: dict[str, float]) -> dict[str, str]:
-        # Keep neutral until solver-backed clinch/elimination is wired from Magic/Tragic.
-        return {}
-
     def draw_bracket(
         pts: dict[str, float],
         x0: int,
@@ -605,6 +705,8 @@ def populate_playoff_picture_tab(
         states: dict[str, str],
         series_scores: dict[tuple[str, str], dict[str, int]],
         standings: dict[str, dict[str, Any]] | None,
+        team_strength: dict[str, float],
+        live_series_probs: dict[tuple[str, str], dict[str, Any]],
     ) -> int:
         mode = mode_var.get()
         if mode == "Conference 1-8":
@@ -626,6 +728,8 @@ def populate_playoff_picture_tab(
             pts=pts,
             states=states,
             series_scores=series_scores,
+            team_strength=team_strength,
+            live_series_probs=live_series_probs,
         )
         east_out_x, east_mid_y, east_champ = draw_side_bracket(
             east_x0,
@@ -635,6 +739,8 @@ def populate_playoff_picture_tab(
             pts=pts,
             states=states,
             series_scores=series_scores,
+            team_strength=team_strength,
+            live_series_probs=live_series_probs,
         )
 
         cup_cx = int(round((west_out_x + east_out_x) / 2.0))
@@ -643,7 +749,7 @@ def populate_playoff_picture_tab(
         canvas.create_line(int(west_out_x), int(west_mid_y), int(cup_cx), int(cup_final_y), fill="#8a8a8a", width=2, tags=("bracket_line",))
         canvas.create_line(int(east_out_x), int(east_mid_y), int(cup_cx), int(cup_final_y), fill="#8a8a8a", width=2, tags=("bracket_line",))
 
-        cup_win = _pick_predicted_winner(west_champ, east_champ, pts)
+        cup_win = _pick_bracket_winner(west_champ, east_champ, pts, series_scores, team_strength, live_series_probs)
         cup_w = 286
         cup_h = 180
         cup_cy = int(cup_final_y + 178)
@@ -667,12 +773,13 @@ def populate_playoff_picture_tab(
         hover_cells.clear()
         day = labels[state["idx"]]
         date_lbl.configure(text=f"{day.day} {day.strftime('%B %Y')}")
-        pts = points_snapshot(points_df, day)
+        seed_day = regular_season_reference_day(day, league=league_u)
+        pts = points_snapshot(points_df, seed_day)
         if not pts:
             canvas.create_text(20, 20, text="No standings data available.", fill="#d0d0d0", anchor="w")
             canvas.configure(scrollregion=(0, 0, 1200, 400))
             return
-        standings = standings_tiebreak_snapshot(day) if league_u == "NHL" else {}
+        standings = standings_tiebreak_snapshot(seed_day) if league_u == "NHL" else {}
 
         league_x = 24
         league_w = 118
@@ -700,11 +807,13 @@ def populate_playoff_picture_tab(
         canvas.create_text(wc_x + wc_w / 2, top_y + 24, text="Wildcard", fill="#d0d0d0", font=("TkDefaultFont", 11, "bold"), anchor="n")
 
         data_y = top_y + 46
-        status = _status_map(pts)
         series_scores = _series_score_snapshot(day, league=league_u)
+        status = playoff_status_map(day, pts, standings, league=league_u, series_scores=series_scores)
+        team_strength = team_strength_snapshot(day, league=league_u)
+        live_series_probs = live_playoff_series_probabilities(day, season_text=SEASON, league=league_u)
         p_end = draw_presidents(pts, league_x, data_y, status, standings)
         w_end = draw_wildcard(pts, wc_x, data_y, status, standings)
-        b_end = draw_bracket(pts, bracket_left, 62, status, series_scores, standings)
+        b_end = draw_bracket(pts, bracket_left, 62, status, series_scores, standings, team_strength, live_series_probs)
         bottom = max(p_end, w_end, b_end) + 24
         canvas.configure(scrollregion=(0, 0, max(1700, bracket_right + 2), max(980, bottom)))
 
@@ -762,7 +871,7 @@ def populate_playoff_picture_tab(
         for x0, y0, x1, y1, code in hover_cells:
             if x0 <= x <= x1 and y0 <= y <= y1:
                 d = labels[state["idx"]]
-                pts = points_snapshot(points_df, d)
+                pts = points_snapshot(points_df, regular_season_reference_day(d, league=league_u))
                 p = float(pts.get(code, 0.0))
                 hit = f"{TEAM_NAMES.get(code, code)} ({code})\nPoints: {int(round(p))}"
                 break
