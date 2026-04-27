@@ -136,6 +136,7 @@ def render_df_heatmap_with_graph(
     allow_negative_values: bool = False,
     stats_league: Literal["NHL", "PWHL"] = "NHL",
     initial_team_order: Optional[list[str]] = None,
+    visible_row_count: Optional[int] = None,
 ) -> dict[str, Callable[[], None]]:
     colors = {
         "canvas_bg": DARK_CANVAS_BG,
@@ -1591,7 +1592,10 @@ def render_df_heatmap_with_graph(
         min_bottom = _min_bottom_structural(paned_h)
         max_top_struct = max(min_top, paned_h - min_bottom)
         max_top_struct = min(max_top_struct, max(0, paned_h - 1))
-        table_need = int(len(current_df.index) * cell_height)
+        row_count = len(current_df.index)
+        if isinstance(visible_row_count, int) and visible_row_count > 0:
+            row_count = min(row_count, int(visible_row_count))
+        table_need = int(row_count * cell_height)
         return int(max(min_top, min(table_need, max_top_struct)))
 
     def _bounds():

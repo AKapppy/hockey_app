@@ -17,6 +17,7 @@ from hockey_app.domain.colors import (
     _rgb_to_hex,
 )
 from hockey_app.domain.teams import DIVS_MASTER, TEAM_NAMES, canon_team_code
+from hockey_app.ui.tabs.models_data import playoff_field_order, playoffs_have_started
 
 try:
     from PIL import Image, ImageTk  # type: ignore
@@ -30,6 +31,24 @@ except Exception:
 DARK_CANVAS_BG = "#262626"
 TkImg = Any
 LogoBank = Any
+
+
+def _playoff_matchup_ring_order(field: list[str]) -> list[str]:
+    if len(field) < 16:
+        return [canon_team_code(code) for code in field if canon_team_code(code)]
+
+    west = [canon_team_code(code) for code in field[:8] if canon_team_code(code)]
+    east = [canon_team_code(code) for code in field[8:16] if canon_team_code(code)]
+    ordered = east[4:8] + east[:4] + west[4:8] + west[:4]
+
+    out: list[str] = []
+    seen: set[str] = set()
+    for code in ordered:
+        if not code or code in seen:
+            continue
+        seen.add(code)
+        out.append(code)
+    return out
 
 
 def _safe_float(v: Any, default: float = float("nan")) -> float:
@@ -215,6 +234,17 @@ def render_pie_chart_tab(
         cen = filt(DIVS_MASTER.get("Central", []))
         pac = filt(DIVS_MASTER.get("Pacific", []))
         return metro + atl + cen + pac
+
+    def _pie_order_for_selected_date() -> list[str]:
+        selected_day = start_date + dt.timedelta(days=max(0, int(selected_col_idx)))
+        if playoffs_have_started(selected_day, league="NHL"):
+            field = [canon_team_code(code) for code in playoff_field_order(selected_day, league="NHL")]
+            field = [code for code in field if code in present_codes]
+            if field:
+                ordered = _playoff_matchup_ring_order(field)
+                tail = [code for code in _pie_order_by_division() if code not in set(ordered)]
+                return ordered + tail
+        return _pie_order_by_division()
 
     pie_order = _pie_order_by_division()
 
@@ -725,6 +755,7 @@ def render_pie_chart_tab(
         _chart_center.update({"cx": cx, "cy": cy, "inner": inner_r, "outer": outer_r, "thick": thick})
 
         sel = get_selected_team_code()
+        pie_order = _pie_order_for_selected_date()
 
         for i, mk in enumerate(metric_order):
             r_out = outer_r - i * thick

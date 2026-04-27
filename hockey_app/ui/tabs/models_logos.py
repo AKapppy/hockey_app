@@ -93,6 +93,6 @@ def get_model_logo(
     if logo_bank is None:
         return None
     try:
-        return logo_bank.get(code, height=height, dim=bool(dim), dim_amt=0.60)
+        return logo_bank.get(code, height=height, dim=bool(dim), dim_amt=0.50)
     except Exception:
         return None

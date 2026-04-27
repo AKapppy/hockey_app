@@ -10,6 +10,7 @@ from html import unescape
 from pathlib import Path
 import tkinter as tk
 from tkinter import messagebox, ttk
+from types import SimpleNamespace
 from typing import Any, Callable, Optional
 import unicodedata
 from urllib.parse import urljoin
@@ -58,6 +59,84 @@ APP_TZ = ZoneInfo(str(TIMEZONE))
 TOP_N_LIST = 25
 MIN_PLAYER_ROWS_CACHE = 4
 _PWHL_LOGO_CACHE: dict[tuple[str, int], Any] = {}
+NHL_PHASE_CHOICES = ["Preseason", "Regular Season", "Postseason"]
+NHL_PHASE_TO_GAME_TYPE = {
+    "Preseason": 1,
+    "Regular Season": 2,
+    "Postseason": 3,
+}
+
+
+def _normalize_nhl_phase_name(value: str) -> str:
+    raw = str(value or "").strip().lower()
+    if raw in {"preseason", "pre-season", "pre"}:
+        return "Preseason"
+    if raw in {"postseason", "post-season", "playoffs", "playoff", "post"}:
+        return "Postseason"
+    return "Regular Season"
+
+
+def _phase_cache_token(value: str) -> str:
+    return _normalize_nhl_phase_name(value).lower().replace(" ", "_")
+
+
+def _phase_date_range_for_nhl(
+    *,
+    phase: str,
+    bounds: Any,
+    season_start: dt.date,
+    season_end: dt.date,
+) -> tuple[dt.date, dt.date]:
+    phase_name = _normalize_nhl_phase_name(phase)
+    preseason_start = bounds.preseason_start or season_start
+    regular_start = bounds.regular_start or season_start
+    regular_end = bounds.regular_end or season_end
+    playoffs_start = bounds.playoffs_start or season_end
+    playoffs_end = bounds.playoffs_end or season_end
+
+    if phase_name == "Preseason":
+        start = preseason_start
+        end = (regular_start - dt.timedelta(days=1)) if regular_start else regular_end
+    elif phase_name == "Postseason":
+        start = playoffs_start
+        end = playoffs_end
+    else:
+        start = regular_start
+        end = regular_end
+
+    start = max(season_start, start)
+    end = min(season_end, end)
+    return start, end
+
+
+def _game_row_date(game: dict[str, Any]) -> Optional[dt.date]:
+    for key in ("gameDate", "date", "startTimeUTC", "startTime"):
+        raw = str(game.get(key) or "").strip()
+        if not raw:
+            continue
+        try:
+            return dt.date.fromisoformat(raw[:10])
+        except Exception:
+            continue
+    return None
+
+
+def _nhl_game_matches_phase(game: dict[str, Any], *, phase: str, bounds: Any) -> bool:
+    want_type = NHL_PHASE_TO_GAME_TYPE.get(_normalize_nhl_phase_name(phase), 2)
+    game_type = _safe_int(game.get("gameType") or game.get("gameTypeId") or game.get("gameTypeCode"))
+    if game_type in {1, 2, 3}:
+        return game_type == want_type
+
+    game_date = _game_row_date(game)
+    if game_date is None:
+        return phase == "Regular Season"
+    phase_start, phase_end = _phase_date_range_for_nhl(
+        phase=phase,
+        bounds=bounds,
+        season_start=START_DATE,
+        season_end=END_DATE,
+    )
+    return phase_start <= game_date <= phase_end
 
 
 def _season_compact_id(season: str) -> str:
@@ -93,12 +172,16 @@ def _has_any_positive_stat(rows: dict[str, dict[str, Any]], stats: tuple[str, ..
     return False
 
 
-def _player_payload_is_usable(payload: Any, *, league: str) -> bool:
+def _player_payload_is_usable(payload: Any, *, league: str, phase: str | None = None) -> bool:
     if not isinstance(payload, dict):
         return False
     payload_league = str(payload.get("league") or league).upper()
     if payload_league and payload_league != str(league).upper():
         return False
+    if phase is not None:
+        payload_phase = _normalize_nhl_phase_name(str(payload.get("phase") or ""))
+        if payload_phase != _normalize_nhl_phase_name(phase):
+            return False
     skaters = payload.get("skaters")
     goalies = payload.get("goalies")
     if not isinstance(skaters, dict) or not isinstance(goalies, dict):
@@ -126,6 +209,11 @@ def _payload_iso_date_or_today(payload: dict[str, Any], today: dt.date) -> dt.da
         except Exception:
             pass
     return today
+
+
+def _player_payload_needs_refresh_for_phase(payload: dict[str, Any], *, phase_end: dt.date) -> bool:
+    payload_day = _payload_iso_date_or_today(payload, phase_end)
+    return payload_day < phase_end
 
 
 def _leader_player_name(row: dict[str, Any]) -> str:
@@ -177,7 +265,7 @@ def _leader_value(row: dict[str, Any], stat_key: str) -> float:
 
 def _fetch_nhl_leaders_json(cache: DiskCache, key: str, url: str, *, allow_network: bool) -> Optional[dict[str, Any]]:
     hit = cache.get_json(key, ttl_s=None)
-    if isinstance(hit, dict):
+    if isinstance(hit, dict) and not allow_network:
         return hit
     if not allow_network:
         return None
@@ -189,6 +277,8 @@ def _fetch_nhl_leaders_json(cache: DiskCache, key: str, url: str, *, allow_netwo
             cache.set_json(key, raw)
             return raw
     except Exception:
+        if isinstance(hit, dict):
+            return hit
         return None
     return None
 
@@ -198,10 +288,10 @@ def _aggregate_nhl_player_stats_from_leaders(
     cache: DiskCache,
     season: str,
     allow_network: bool,
+    game_type: int = 2,
     limit: int = TOP_N_LIST,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
     season_id = _season_compact_id(season)
-    game_type = 2  # regular season
 
     skater_url = NHL_SKATER_LEADERS.format(season=season_id, game_type=game_type, limit=max(1, int(limit)))
     goalie_url = NHL_GOALIE_LEADERS.format(season=season_id, game_type=game_type, limit=max(1, int(limit)))
@@ -1356,6 +1446,8 @@ def _aggregate_nhl_player_stats(
     allow_network: bool,
     dmin: dt.date,
     dmax: dt.date,
+    phase: str,
+    bounds: Any,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
     skaters: dict[str, dict[str, Any]] = {}
     goalies: dict[str, dict[str, Any]] = {}
@@ -1365,6 +1457,8 @@ def _aggregate_nhl_player_stats(
         games = _iter_nhl_games(nhl, d)
         for g in games:
             if not _game_is_final(g):
+                continue
+            if not _nhl_game_matches_phase(g, phase=phase, bounds=bounds):
                 continue
             gid = _safe_int(g.get("id"))
             away = g.get("awayTeam") or {}
@@ -1667,13 +1761,41 @@ def populate_player_stats_tab(
     season_id = _season_compact_id(SEASON)
     headshot_root = pwhl_dir(SEASON) if league_u == "PWHL" else nhl_dir(SEASON)
     headshot_dir = headshot_root / "headshots"
-    # Versioned cache key so stale payloads from earlier stat extraction logic do not persist.
-    key = f"player_stats/{league_u}/latest_v10"
+    if league_u == "NHL":
+        try:
+            season_bounds = nhl.get_season_boundaries(probe_date=END_DATE)
+        except Exception:
+            season_bounds = SimpleNamespace(
+                preseason_start=START_DATE,
+                regular_start=START_DATE,
+                regular_end=END_DATE,
+                playoffs_start=END_DATE,
+                playoffs_end=END_DATE,
+            )
+    else:
+        season_bounds = None
 
     top = tk.Frame(parent, bg=bg)
     top.pack(fill="x", padx=12, pady=(8, 6))
     date_lbl = tk.Label(top, text="", bg=bg, fg=fg, font=("TkDefaultFont", 22))
     date_lbl.pack(side="top", pady=(0, 4))
+    phase_var = tk.StringVar(value="Regular Season")
+    phase_btns: dict[str, tk.Label] = {}
+    if league_u == "NHL":
+        phase_row = tk.Frame(top, bg=bg)
+        phase_row.pack(side="top", pady=(0, 4))
+        for i, phase_name in enumerate(NHL_PHASE_CHOICES):
+            btn = tk.Label(
+                phase_row,
+                text=phase_name,
+                padx=10,
+                pady=5,
+                cursor="hand2",
+                bg="#2f2f2f",
+                fg="#f0f0f0",
+            )
+            btn.pack(side="left", padx=(0 if i == 0 else 8, 0))
+            phase_btns[phase_name] = btn
 
     body = tk.Frame(parent, bg=bg)
     body.pack(fill="both", expand=True, padx=12, pady=(4, 12))
@@ -1822,10 +1944,31 @@ def populate_player_stats_tab(
         return str(int(round(v)))
 
     def _load_or_refresh() -> dict[str, Any]:
+        selected_phase = _normalize_nhl_phase_name(phase_var.get() if league_u == "NHL" else "Regular Season")
+        key = f"player_stats/{league_u}/{_phase_cache_token(selected_phase)}/latest_v11"
+        phase_end = today
+        if league_u == "NHL":
+            _phase_start, phase_end = _phase_date_range_for_nhl(
+                phase=selected_phase,
+                bounds=season_bounds,
+                season_start=START_DATE,
+                season_end=today,
+            )
         should_refresh = _should_refresh_player_cache(league_u, nhl, pwhl, today)
+        if league_u == "NHL":
+            should_refresh = should_refresh and any(
+                _nhl_game_matches_phase(g, phase=selected_phase, bounds=season_bounds)
+                for g in _iter_nhl_games(nhl, today)
+                if isinstance(g, dict)
+            )
         hit_raw = cache.get_json(key, ttl_s=None)
-        hit = hit_raw if _player_payload_is_usable(hit_raw, league=league_u) else None
-        if isinstance(hit, dict) and not should_refresh:
+        hit = hit_raw if _player_payload_is_usable(hit_raw, league=league_u, phase=selected_phase) else None
+        hit_stale = bool(
+            league_u == "NHL"
+            and isinstance(hit, dict)
+            and _player_payload_needs_refresh_for_phase(hit, phase_end=phase_end)
+        )
+        if isinstance(hit, dict) and not should_refresh and not hit_stale:
             try:
                 write_player_stats_xml(
                     season=SEASON,
@@ -1835,21 +1978,45 @@ def populate_player_stats_tab(
             except Exception:
                 pass
             return hit
-        xml_raw = read_player_stats_xml(season=SEASON, league=league_u)
-        xml_hit = xml_raw if _player_payload_is_usable(xml_raw, league=league_u) else None
-        if isinstance(xml_hit, dict) and not should_refresh:
+        xml_raw = read_player_stats_xml(
+            season=SEASON,
+            league=league_u,
+            phase=selected_phase if league_u == "NHL" else None,
+        )
+        xml_hit = xml_raw if _player_payload_is_usable(xml_raw, league=league_u, phase=selected_phase) else None
+        xml_stale = bool(
+            league_u == "NHL"
+            and isinstance(xml_hit, dict)
+            and _player_payload_needs_refresh_for_phase(xml_hit, phase_end=phase_end)
+        )
+        if isinstance(xml_hit, dict) and not should_refresh and not xml_stale:
             try:
                 cache.set_json(key, xml_hit)
             except Exception:
                 pass
             return xml_hit
-        allow_network = should_refresh or not isinstance(hit, dict) or not isinstance(xml_hit, dict)
+        allow_network = (
+            should_refresh
+            or hit_stale
+            or xml_stale
+            or not isinstance(hit, dict)
+            or not isinstance(xml_hit, dict)
+        )
+        payload_date = today
         if league_u == "NHL":
+            phase_start, phase_end = _phase_date_range_for_nhl(
+                phase=selected_phase,
+                bounds=season_bounds,
+                season_start=START_DATE,
+                season_end=today,
+            )
+            payload_date = phase_end
             # Prefer NHL leaders endpoints for cleaner current-season leaderboard data.
             sk, gl = _aggregate_nhl_player_stats_from_leaders(
                 cache=cache,
                 season=SEASON,
                 allow_network=allow_network,
+                game_type=NHL_PHASE_TO_GAME_TYPE.get(selected_phase, 2),
                 limit=TOP_N_LIST,
             )
             # Backfill secondary stat categories that leaders feeds may omit.
@@ -1857,8 +2024,10 @@ def populate_player_stats_tab(
                 nhl=nhl,
                 cache=cache,
                 allow_network=allow_network,
-                dmin=START_DATE,
-                dmax=today,
+                dmin=phase_start,
+                dmax=phase_end,
+                phase=selected_phase,
+                bounds=season_bounds,
             )
             _backfill_missing_nhl_stats_from_aggregate(
                 target_skaters=sk,
@@ -1877,13 +2046,14 @@ def populate_player_stats_tab(
                 allow_network=allow_network,
             )
         out = {
-            "date": today.isoformat(),
+            "date": payload_date.isoformat(),
             "league": league_u,
+            "phase": selected_phase,
             "skaters": sk,
             "goalies": gl,
             "updated": dt.datetime.now(APP_TZ).strftime("%-m/%-d %H:%M:%S"),
         }
-        if _player_payload_is_usable(out, league=league_u):
+        if _player_payload_is_usable(out, league=league_u, phase=selected_phase):
             cache.set_json(key, out)
             try:
                 write_player_stats_xml(
@@ -1973,6 +2143,10 @@ def populate_player_stats_tab(
             _clear_rows(skater_rows)
             _clear_rows(goalie_rows)
             live_imgs.clear()
+            if league_u == "NHL":
+                active = _normalize_nhl_phase_name(phase_var.get())
+                for phase_name, btn in phase_btns.items():
+                    btn.configure(bg="#3a3a3a" if phase_name == active else "#2f2f2f", fg="#f0f0f0")
             payload = payload_state.get("data")
             if not isinstance(payload, dict):
                 payload = _load_or_refresh()
@@ -1990,6 +2164,15 @@ def populate_player_stats_tab(
 
     skater_stat.trace_add("write", lambda *_: _render())
     goalie_stat.trace_add("write", lambda *_: _render())
+    for phase_name, btn in phase_btns.items():
+        btn.bind(
+            "<Button-1>",
+            lambda _e, ph=phase_name: (
+                redraw() if phase_var.get() == _normalize_nhl_phase_name(ph) else phase_var.set(_normalize_nhl_phase_name(ph))
+            ),
+            add="+",
+        )
+    phase_var.trace_add("write", lambda *_: redraw())
     _render()
 
     def _install_wheel_scrolling(target_canvas: tk.Canvas) -> None:

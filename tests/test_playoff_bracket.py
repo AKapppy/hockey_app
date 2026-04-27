@@ -4,6 +4,7 @@ import datetime as dt
 import unittest
 
 from hockey_app.ui.tabs.models_playoff_math import series_probability_table
+from hockey_app.ui.renderers.pie_chart import _playoff_matchup_ring_order
 from hockey_app.ui.tabs.models_playoff_picture import _bracket_snapshot, _pick_bracket_winner, playoff_status_map
 from hockey_app.ui.tabs.points import _is_nhl_regular_season_game
 from hockey_app.ui.tabs.models_playoff_win_probabilities import _best_of_7_lengths_from_score
@@ -73,6 +74,33 @@ class PlayoffBracketSnapshotTests(unittest.TestCase):
         bracket = _bracket_snapshot(pts, standings=None)
 
         self.assertEqual(bracket["West_R1"], ["VGK", "MIN", "EDM", "ANA", "COL", "LAK", "DAL", "UTA"])
+
+    def test_playoff_matchup_ring_order_keeps_series_neighbors_together(self) -> None:
+        field = [
+            "VGK",
+            "MIN",
+            "EDM",
+            "ANA",
+            "COL",
+            "LAK",
+            "DAL",
+            "UTA",
+            "BUF",
+            "BOS",
+            "TBL",
+            "MTL",
+            "CAR",
+            "OTT",
+            "PIT",
+            "PHI",
+        ]
+
+        ordered = _playoff_matchup_ring_order(field)
+
+        self.assertEqual(
+            ordered,
+            ["CAR", "OTT", "PIT", "PHI", "BUF", "BOS", "TBL", "MTL", "COL", "LAK", "DAL", "UTA", "VGK", "MIN", "EDM", "ANA"],
+        )
 
     def test_finished_series_overrides_points_projection(self) -> None:
         pts = {"BOS": 110.0, "OTT": 95.0}

@@ -13,7 +13,7 @@ from hockey_app.data.cache import DiskCache
 from hockey_app.data.nhl_api import NHLApi
 from hockey_app.data.paths import cache_dir, nhl_dir, pwhl_dir
 from hockey_app.data.pwhl_api import PWHLApi
-from hockey_app.data.xml_cache import read_team_stats_xml, write_team_stats_xml
+from hockey_app.data.xml_cache import read_games_day_xml, read_team_stats_xml, write_team_stats_xml
 
 PHASES = ["preseason", "regular", "postseason"]
 PHASE_LABEL = {
@@ -357,6 +357,23 @@ def _phase_ranges_pwhl(
 
 
 def _load_nhl_games_for_date(api: NHLApi, d: dt.date) -> list[dict[str, Any]]:
+    # Prefer the locally merged scoreboard day cache so Game Stats sees the same
+    # complete league slate the Scoreboard already assembled.
+    try:
+        xml_games = read_games_day_xml(season=SEASON, day=d)
+    except Exception:
+        xml_games = []
+    if isinstance(xml_games, list) and xml_games:
+        out = [
+            g
+            for g in xml_games
+            if isinstance(g, dict)
+            and str(g.get("league") or "").strip().upper() == "NHL"
+            and _is_final_state(str(g.get("gameState") or g.get("gameStatus") or ""))
+        ]
+        if out:
+            return out
+
     iso = d.isoformat()
     for key in (f"nhl/score/final/{iso}", f"nhl/score/live/{iso}"):
         try:
@@ -365,6 +382,12 @@ def _load_nhl_games_for_date(api: NHLApi, d: dt.date) -> list[dict[str, Any]]:
             hit = None
         if isinstance(hit, dict):
             return list((hit.get("games") or []))
+    try:
+        payload = api.score(d, force_network=False)
+    except Exception:
+        payload = None
+    if isinstance(payload, dict):
+        return list((payload.get("games") or []))
     return []
 
 

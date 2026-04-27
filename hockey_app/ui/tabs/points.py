@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import datetime as dt
+import tkinter as tk
 from typing import Any, Callable, Dict
+from tkinter import ttk
 
 import pandas as pd
 
@@ -11,6 +13,56 @@ from hockey_app.data.nhl_api import NHLApi
 from hockey_app.data.pwhl_api import PWHLApi
 from hockey_app.data.paths import nhl_dir, pwhl_dir
 from hockey_app.data.xml_cache import read_game_stats_xml, read_table_xml, write_table_xml
+
+
+NHL_PHASE_CHOICES = ["Regular Season", "Preseason", "Postseason"]
+
+
+def _normalize_nhl_phase_name(value: str) -> str:
+    raw = str(value or "").strip().lower()
+    if raw in {"preseason", "pre-season", "pre"}:
+        return "Preseason"
+    if raw in {"postseason", "post-season", "playoffs", "playoff", "post"}:
+        return "Postseason"
+    return "Regular Season"
+
+
+def _phase_cache_token(value: str) -> str:
+    return _normalize_nhl_phase_name(value).lower().replace(" ", "_")
+
+
+def _nhl_phase_table_key(value: str) -> str:
+    phase_name = _normalize_nhl_phase_name(value)
+    if phase_name == "Preseason":
+        return "preseason"
+    if phase_name == "Postseason":
+        return "postseason"
+    return "regular"
+
+
+def _nhl_phase_bounds(bounds: Any, phase: str, *, season_start: dt.date, season_end: dt.date) -> tuple[dt.date, dt.date]:
+    phase_name = _normalize_nhl_phase_name(phase)
+    preseason_start = getattr(bounds, "preseason_start", None) or season_start
+    regular_start = getattr(bounds, "regular_start", None) or season_start
+    regular_end = getattr(bounds, "regular_end", None) or season_end
+    playoffs_start = getattr(bounds, "playoffs_start", None) or season_end
+    playoffs_end = getattr(bounds, "playoffs_end", None) or season_end
+
+    if phase_name == "Preseason":
+        start = preseason_start
+        end = regular_start - dt.timedelta(days=1)
+    elif phase_name == "Postseason":
+        start = playoffs_start
+        end = playoffs_end
+    else:
+        start = regular_start
+        end = regular_end
+
+    start = max(season_start, start)
+    end = min(season_end, end)
+    if end < start:
+        end = start
+    return start, end
 
 
 def _date_labels(start: dt.date, end: dt.date) -> list[tuple[dt.date, str]]:
@@ -42,19 +94,39 @@ def _is_extra_time(g: dict[str, Any]) -> bool:
     return lp in {"OT", "SO"}
 
 
-def _is_nhl_regular_season_game(g: dict[str, Any]) -> bool:
+def _is_nhl_game_in_phase(g: dict[str, Any], phase: str) -> bool:
+    phase_name = _normalize_nhl_phase_name(phase)
     gt = g.get("gameType") or g.get("gameTypeId") or g.get("gameTypeCode")
     gt_txt = str(gt or "").strip().upper()
-    if gt_txt in {"2", "R"}:
-        return True
-    if gt_txt in {"3", "P"}:
-        return False
+    if phase_name == "Preseason":
+        if gt_txt in {"1", "PR", "PRE"}:
+            return True
+        if gt_txt in {"2", "R", "3", "P"}:
+            return False
+    elif phase_name == "Postseason":
+        if gt_txt in {"3", "P"}:
+            return True
+        if gt_txt in {"1", "PR", "PRE", "2", "R"}:
+            return False
+    else:
+        if gt_txt in {"2", "R"}:
+            return True
+        if gt_txt in {"1", "PR", "PRE", "3", "P"}:
+            return False
     gid = str(g.get("id") or g.get("gameId") or "").strip()
+    if phase_name == "Preseason":
+        return gid.startswith("202501")
+    if phase_name == "Postseason":
+        return gid.startswith("202503")
     if gid.startswith("202502"):
         return True
-    if gid.startswith("202503"):
+    if gid.startswith(("202501", "202503")):
         return False
     return False
+
+
+def _is_nhl_regular_season_game(g: dict[str, Any]) -> bool:
+    return _is_nhl_game_in_phase(g, "Regular Season")
 
 
 def _points_from_game_result(result: str, *, league: str) -> int:
@@ -82,18 +154,19 @@ def _build_points_df_from_game_stats_xml(
     teams: list[str],
     start: dt.date,
     end: dt.date,
+    phase: str,
 ) -> pd.DataFrame | None:
     if end < start:
         return None
     phase_tables = read_game_stats_xml(season=SEASON, league=league)
     if not isinstance(phase_tables, dict):
         return None
-    regular = phase_tables.get("regular")
-    if not isinstance(regular, dict):
+    phase_table = phase_tables.get(_nhl_phase_table_key(phase))
+    if not isinstance(phase_table, dict):
         return None
 
-    rows = regular.get("rows")
-    date_cols = regular.get("date_cols")
+    rows = phase_table.get("rows")
+    date_cols = phase_table.get("date_cols")
     if not isinstance(rows, list) or not isinstance(date_cols, list):
         return None
 
@@ -122,7 +195,7 @@ def _build_points_df_from_game_stats_xml(
     return pd.DataFrame(by_col, index=teams, dtype="float64")
 
 
-def _build_points_df(api: NHLApi, start: dt.date, end: dt.date) -> tuple[pd.DataFrame, list[str]]:
+def _build_points_df(api: NHLApi, start: dt.date, end: dt.date, *, phase: str) -> tuple[pd.DataFrame, list[str]]:
     teams = [canon_team_code(c) for c in TEAM_NAMES.keys()]
     teams = sorted(set(teams), key=lambda c: (TEAM_NAMES.get(c, c), c))
     from_game_stats = _build_points_df_from_game_stats_xml(
@@ -130,6 +203,7 @@ def _build_points_df(api: NHLApi, start: dt.date, end: dt.date) -> tuple[pd.Data
         teams=teams,
         start=start,
         end=end,
+        phase=phase,
     )
     if isinstance(from_game_stats, pd.DataFrame) and not from_game_stats.empty:
         return from_game_stats, teams
@@ -176,7 +250,7 @@ def _build_points_df(api: NHLApi, start: dt.date, end: dt.date) -> tuple[pd.Data
             gid = int(g.get("id") or g.get("gameId") or 0)
             if gid and gid in seen_games:
                 continue
-            if not _is_nhl_regular_season_game(g):
+            if not _is_nhl_game_in_phase(g, phase):
                 if gid:
                     seen_games.add(gid)
                 continue
@@ -241,6 +315,7 @@ def _build_points_df_pwhl(api: PWHLApi, start: dt.date, end: dt.date) -> tuple[p
         teams=teams,
         start=start,
         end=end,
+        phase="Regular Season",
     )
     if isinstance(from_game_stats, pd.DataFrame) and not from_game_stats.empty:
         return from_game_stats, teams
@@ -366,37 +441,52 @@ def populate_points_tab(
             else:
                 df, original_order = _build_points_df_pwhl(pwhl_api, start, end)
                 cache.set_json(key, _df_to_payload(df, original_order))
+        return render_heatmap_with_graph(
+            parent,
+            df,
+            tab_key="points",
+            tab_title="Points",
+            team_colors=team_colors,
+            logo_bank=logo_bank,
+            original_order=original_order,
+            team_col_width=team_col_width,
+            cell_width=cell_width,
+            get_selected_team_code=get_selected_team_code,
+            set_selected_team_code=set_selected_team_code,
+            cell_height=22,
+            graph_pad_y=12,
+            hscroll_units=1,
+            start_date=start,
+            value_kind="number",
+            stats_league=league_u if league_u in {"NHL", "PWHL"} else "NHL",
+        )
+
+    api = NHLApi(cache)
+    try:
+        bounds = api.get_season_boundaries(SEASON_PROBE_DATE)
+    except Exception:
+        bounds = None
+
+    start, end = _nhl_phase_bounds(bounds, "Regular Season", season_start=START_DATE, season_end=today)
+    key = f"stats/points_df_nhl_v2/{SEASON}/{_phase_cache_token('Regular Season')}/{start.isoformat()}_{end.isoformat()}"
+    expected_last_col = f"{end.month}/{end.day}"
+    xml_df = read_table_xml(
+        season=SEASON,
+        lump="points_history",
+        league=league_u,
+        phase="Regular Season",
+    ) if end < real_today else None
+    if isinstance(xml_df, pd.DataFrame) and not xml_df.empty and len(xml_df.columns) > 0 and str(xml_df.columns[-1]) == expected_last_col:
+        df = xml_df.copy()
+        original_order = [str(x) for x in list(df.index)]
     else:
-        api = NHLApi(cache)
-        try:
-            bounds = api.get_season_boundaries(SEASON_PROBE_DATE)
-        except Exception:
-            bounds = None
-
-        start = START_DATE
-        if bounds is not None and bounds.regular_start is not None:
-            start = bounds.regular_start
-        end = today
-        if bounds is not None and bounds.last_scheduled_game is not None:
-            end = min(end, bounds.last_scheduled_game)
-        if end < start:
-            end = start
-
-        key = f"stats/points_df_nhl/{SEASON}/{start.isoformat()}_{end.isoformat()}"
-        expected_last_col = f"{end.month}/{end.day}"
-        # Avoid same-day stale reads: points can change while column labels don't.
-        xml_df = read_table_xml(season=SEASON, lump="points_history", league=league_u) if end < real_today else None
-        if isinstance(xml_df, pd.DataFrame) and not xml_df.empty and len(xml_df.columns) > 0 and str(xml_df.columns[-1]) == expected_last_col:
-            df = xml_df.copy()
-            original_order = [str(x) for x in list(df.index)]
+        cached_payload = cache.get_json(key, ttl_s=600) if end < real_today else None
+        parsed = _df_from_payload(cached_payload) if isinstance(cached_payload, dict) else None
+        if parsed is not None:
+            df, original_order = parsed
         else:
-            cached_payload = cache.get_json(key, ttl_s=600) if end < real_today else None
-            parsed = _df_from_payload(cached_payload) if isinstance(cached_payload, dict) else None
-            if parsed is not None:
-                df, original_order = parsed
-            else:
-                df, original_order = _build_points_df(api, start, end)
-                cache.set_json(key, _df_to_payload(df, original_order))
+            df, original_order = _build_points_df(api, start, end, phase="Regular Season")
+            cache.set_json(key, _df_to_payload(df, original_order))
     try:
         write_table_xml(
             season=SEASON,
@@ -405,26 +495,58 @@ def populate_points_tab(
             start=start,
             end=end,
             df=df,
+            phase="Regular Season",
         )
     except Exception:
         pass
 
-    return render_heatmap_with_graph(
-        parent,
-        df,
-        tab_key="points",
-        tab_title="Points",
-        team_colors=team_colors,
-        logo_bank=logo_bank,
-        original_order=original_order,
-        team_col_width=team_col_width,
-        cell_width=cell_width,
-        get_selected_team_code=get_selected_team_code,
-        set_selected_team_code=set_selected_team_code,
-        cell_height=22,
-        graph_pad_y=12,
-        hscroll_units=1,
-        start_date=start,
-        value_kind="number",
-        stats_league=league_u if league_u in {"NHL", "PWHL"} else "NHL",
-    )
+    def _render_regular() -> dict[str, Callable[[], None]]:
+        return render_heatmap_with_graph(
+            parent,
+            df,
+            tab_key="points",
+            tab_title="Points",
+            team_colors=team_colors,
+            logo_bank=logo_bank,
+            original_order=original_order,
+            team_col_width=team_col_width,
+            cell_width=cell_width,
+            get_selected_team_code=get_selected_team_code,
+            set_selected_team_code=set_selected_team_code,
+            cell_height=22,
+            graph_pad_y=12,
+            hscroll_units=1,
+            start_date=start,
+            value_kind="number",
+            stats_league=league_u,
+        )
+
+    ctrl_ref = _render_regular()
+
+    def redraw() -> None:
+        nonlocal df, original_order, ctrl_ref
+        cached_payload = cache.get_json(key, ttl_s=600) if end < real_today else None
+        parsed = _df_from_payload(cached_payload) if isinstance(cached_payload, dict) else None
+        if parsed is not None:
+            df, original_order = parsed
+        else:
+            df, original_order = _build_points_df(api, start, end, phase="Regular Season")
+            cache.set_json(key, _df_to_payload(df, original_order))
+        try:
+            write_table_xml(
+                season=SEASON,
+                lump="points_history",
+                league=league_u,
+                start=start,
+                end=end,
+                df=df,
+                phase="Regular Season",
+            )
+        except Exception:
+            pass
+        ctrl_ref = _render_regular()
+
+    def reset() -> None:
+        redraw()
+
+    return {"redraw": redraw, "reset": reset}

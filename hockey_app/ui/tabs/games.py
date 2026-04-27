@@ -943,10 +943,14 @@ def _promote_live_game_row_from_gamecenter(
         if state:
             out["gameState"] = state
         period = _as_dict(snap.get("periodDescriptor"))
-        if period:
+        if period and not _as_dict(out.get("periodDescriptor")):
             out["periodDescriptor"] = period
         clock = _as_dict(snap.get("clock"))
-        if clock:
+        existing_clock = _as_dict(out.get("clock"))
+        existing_clock_txt = str(
+            existing_clock.get("timeRemaining") or existing_clock.get("time") or ""
+        ).strip()
+        if clock and not (existing_clock_txt or bool(existing_clock.get("inIntermission"))):
             out["clock"] = clock
         away_pbp_shots, home_pbp_shots = _pbp_shot_totals(out, pbp)
         if away.get("shotsOnGoal") is None and away_pbp_shots is not None:
@@ -1869,6 +1873,20 @@ def _merge_games_by_id(primary: list[dict[str, Any]], secondary: list[dict[str, 
                 return True
         return False
 
+    def _parse_game_start_value(value: Any) -> Optional[dt.datetime]:
+        ss = str(value or "").strip()
+        if not ss:
+            return None
+        if ss.endswith("Z"):
+            ss = ss[:-1] + "+00:00"
+        try:
+            parsed = dt.datetime.fromisoformat(ss)
+        except Exception:
+            return None
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=ZoneInfo("UTC"))
+        return parsed
+
     out: list[dict[str, Any]] = []
     for g in primary:
         gid = str(g.get("id") or "").strip()
@@ -1900,6 +1918,11 @@ def _merge_games_by_id(primary: list[dict[str, Any]], secondary: list[dict[str, 
                     if team_merged.get(tk) in (None, "", [], {}):
                         team_merged[tk] = tv
                 m[k] = team_merged
+            elif k in {"startTimeUTC", "startTime"}:
+                cur_start = _parse_game_start_value(m.get(k))
+                new_start = _parse_game_start_value(v)
+                if new_start is not None and cur_start is None:
+                    m[k] = v
             elif m.get(k) in (None, "", [], {}):
                 m[k] = v
         out.append(m)
@@ -1984,7 +2007,10 @@ def _game_sort_key(
 ) -> tuple[int, dt.datetime, int, str, str]:
     # 1) by scheduled start (unknown start goes last), 2) by game id, 3) by teams.
     st = _parse_start_local(g, tz)
-    if not isinstance(st, dt.datetime):
+    if (
+        not isinstance(st, dt.datetime)
+        and str(g.get("league") or "").upper() != "PWHL"
+    ):
         st = _parse_status_time_local(g, tz, selected_date)
     has_start = 0 if isinstance(st, dt.datetime) else 1
     if not isinstance(st, dt.datetime):
@@ -2496,6 +2522,8 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
     auto_refresh_s = 3
     auto_refresh_enabled = True
     auto_refresh_has_active_games = False
+    auto_refresh_active_sources: tuple[bool, bool, bool] = (False, False, False)
+    game_final_state_seen: dict[str, bool] = {}
     season_series_rows_cache: Optional[list[dict[str, Any]]] = None
     season_series_matchup_cache: dict[tuple[str, str], dict[str, Any]] = {}
     espn_summary_index_built = False
@@ -7114,6 +7142,8 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             # If today is cached and no in-progress game could exist, avoid API calls.
             if d in day_payload_cache:
                 cached_games = list((day_payload_cache[d].get("games") or []))
+                if prefer_cached and not allow_network:
+                    return day_payload_cache[d], None, day_payload_stamp.get(d, f"Updated: {_fmt_updated_ts()}")
                 if not _needs_live_refresh(
                     cached_games, assume_started_if_unknown=True
                 ):
@@ -8220,8 +8250,8 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             day_pwhl_cache[d] = []
             return [], day_pwhl_stamp.get(d, f"Updated: {_fmt_updated_ts()}")
 
-    def _render_day(force_rebuild: bool = False) -> None:
-        nonlocal cards, refresh_after_id, last_rendered_date, auto_refresh_has_active_games
+    def _render_day(force_rebuild: bool = False) -> bool:
+        nonlocal cards, refresh_after_id, last_rendered_date, auto_refresh_has_active_games, auto_refresh_active_sources
 
         d = _selected_date()
         # Track date changes for layout/state transitions.
@@ -8367,6 +8397,31 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                 )
             except Exception:
                 pass
+
+        def _game_final_tracking_key(gg: dict[str, Any]) -> str:
+            gid = _to_int(gg.get("id") or gg.get("gameId") or 0, default=0)
+            league = str(gg.get("league") or "NHL").upper()
+            if gid > 0:
+                return f"{league}:{gid}"
+            away_code, home_code = _game_codes(gg)
+            start_raw = str(gg.get("startTimeUTC") or gg.get("startTime") or "").strip()
+            return f"{d.isoformat()}:{league}:{away_code}:{home_code}:{start_raw}"
+
+        def _is_final_game_row(gg: dict[str, Any]) -> bool:
+            state = _game_state(gg)
+            return state in {"FINAL", "OFF"} or state.startswith("FINAL")
+
+        final_transition_seen = False
+        for gg in all_games:
+            if not isinstance(gg, dict):
+                continue
+            key = _game_final_tracking_key(gg)
+            final_now = _is_final_game_row(gg)
+            final_prev = game_final_state_seen.get(key)
+            if final_prev is False and final_now:
+                final_transition_seen = True
+            game_final_state_seen[key] = final_now
+
         def _has_tbd_matchup(game: dict[str, Any]) -> bool:
             if not isinstance(game, dict):
                 return False
@@ -8427,18 +8482,39 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             for gg in all_games
             if isinstance(gg, dict)
         )
+        active_nhl = any(
+            isinstance(gg, dict)
+            and str(gg.get("league") or "").upper() == "NHL"
+            and not _is_olympic_game(gg)
+            and _game_started_and_not_final(gg, assume_started_if_unknown=True)
+            for gg in all_games
+        )
+        active_olympics = any(
+            isinstance(gg, dict)
+            and (str(gg.get("league") or "").upper().startswith("OLYMPICS") or _is_olympic_game(gg))
+            and _game_started_and_not_final(gg, assume_started_if_unknown=True)
+            for gg in all_games
+        )
+        active_pwhl = any(
+            isinstance(gg, dict)
+            and str(gg.get("league") or "").upper() == "PWHL"
+            and _game_started_and_not_final(gg, assume_started_if_unknown=True)
+            for gg in all_games
+        )
+        auto_refresh_active_sources = (active_nhl, active_olympics, active_pwhl)
         grouped = _group_by_league(all_games, selected_date=d, tz=tz)
 
         stage_lbl.configure(text="")
 
         if not all_games:
             auto_refresh_has_active_games = False
+            auto_refresh_active_sources = (False, False, False)
             _schedule_auto_refresh()
             _clear_cards()
             _clear_section_labels()
             empty_lbl.configure(text=err_msg or "No games")
             empty_lbl.lift()
-            return
+            return final_transition_seen
 
         empty_lbl.configure(text="")
         empty_lbl.lower()
@@ -8463,6 +8539,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             _update_cards(ordered_games, d)
 
         _schedule_auto_refresh()
+        return final_transition_seen
 
     def _refresh_live_gamecenter_for_games(
         d: dt.date,
@@ -8505,7 +8582,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                     _load_pbp(
                         gid,
                         allow_network=True,
-                        force_network=force_network and _is_live_clock_running(gg),
+                        force_network=force_network,
                     )
                 except Exception:
                     pass
@@ -8547,7 +8624,7 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
         nhl_regular_n = 0
         nhl_olympic_n = 0
         nhl_games_for_probs: list[dict[str, Any]] = []
-        live_clock_nhl_running = False
+        force_active_game_data = False
         if refresh_nhl or refresh_olympics:
             if refresh_nhl:
                 day_points_pct_cache.clear()
@@ -8567,9 +8644,6 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                 nhl_olympic_n = len([g for g in nhl_games if _is_olympic_game(g)])
                 nhl_regular_n = len(nhl_games) - nhl_olympic_n
                 nhl_games_for_probs = [g for g in nhl_games if not _is_olympic_game(g)]
-                live_clock_nhl_running = any(
-                    _is_live_clock_running(g) for g in nhl_games_for_probs if isinstance(g, dict)
-                )
                 if refresh_nhl:
                     try:
                         _standings_context_by_date(
@@ -8592,33 +8666,29 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                         g for g in list(raw_cached.get("games") or []) if isinstance(g, dict)
                     ]
                     nhl_games_for_probs = [g for g in nhl_games_cached if not _is_olympic_game(g)]
-                    live_clock_nhl_running = any(
-                        _is_live_clock_running(g) for g in nhl_games_for_probs if isinstance(g, dict)
-                    )
                 except Exception:
                     nhl_games_for_probs = []
-                    live_clock_nhl_running = False
-            # When a game clock is actively running, force fresh MoneyPuck gameData
-            # on every refresh tick (no intermissions, no stale cache reuse).
-            force_live_game_data = bool(live_clock_nhl_running and nhl_games_for_probs)
+            started_not_final_games = [
+                g
+                for g in nhl_games_for_probs
+                if isinstance(g, dict)
+                and _game_started_and_not_final(g, assume_started_if_unknown=(d == today))
+            ]
+            # Any started, non-final game needs fresh per-game data on every
+            # refresh, including intermissions and clockless live states.
+            force_active_game_data = bool(started_not_final_games)
             try:
                 _refresh_live_gamecenter_for_games(
                     d,
                     nhl_games_for_probs,
-                    force_network=force_live_game_data,
+                    force_network=force_active_game_data,
                 )
             except Exception:
                 pass
             games_for_moneypuck: list[dict[str, Any]] = []
             if nhl_games_for_probs:
-                started_not_final_games = [
-                    g
-                    for g in nhl_games_for_probs
-                    if isinstance(g, dict)
-                    and _game_started_and_not_final(g, assume_started_if_unknown=(d == today))
-                ]
-                if force_live_game_data:
-                    games_for_moneypuck = [g for g in started_not_final_games if _is_live_clock_running(g)]
+                if force_active_game_data:
+                    games_for_moneypuck = started_not_final_games
                 elif refresh_moneypuck:
                     # Manual/day refresh only needs active games; future games use
                     # day-level percentages from the predictions page refresh below.
@@ -8628,25 +8698,33 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                     _prefetch_moneypuck_game_probs_for_day(
                         d,
                         games_for_moneypuck,
-                        allow_network=bool(refresh_moneypuck or force_live_game_data),
-                        force_network=bool(refresh_moneypuck or force_live_game_data),
+                        allow_network=bool(refresh_moneypuck or force_active_game_data),
+                        force_network=bool(refresh_moneypuck or force_active_game_data),
                     )
                 except Exception:
                     pass
         # The day-level predictions page is useful for future games, but can be slow.
-        # Skip it during active-clock refresh cycles where per-game CSV is authoritative.
-        if refresh_moneypuck and not live_clock_nhl_running:
+        # Skip it during active-game refresh cycles where per-game CSV is authoritative.
+        if refresh_moneypuck and not force_active_game_data:
             try:
                 _get_moneypuck_probs_for_date(d, allow_network=True, force_network=True)
             except Exception:
                 pass
 
+        refresh_external = bool(refresh_olympics or refresh_pwhl)
         espn_olympic_n = 0
-        if refresh_olympics:
+        if refresh_external:
             try:
                 day_external_empty_checked.discard(d)
+                # ESPN's all-hockey scoreboard is shared by the non-NHL leagues we
+                # render here, so invalidate both external caches together before
+                # each live refresh tick instead of letting one league reuse stale
+                # rows from the previous cycle.
+                day_external_cache.pop(d, None)
+                day_pwhl_cache.pop(d, None)
                 o, _p, _estamp = _fetch_espn_games(d, allow_network=True, force_network=True)
-                espn_olympic_n = len(o)
+                if refresh_olympics:
+                    espn_olympic_n = len(o)
             except Exception:
                 espn_olympic_n = 0
         olympics_effective_n = espn_olympic_n if espn_olympic_n > 0 else (nhl_olympic_n if refresh_olympics else 0)
@@ -8749,6 +8827,8 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                     msg = _startup_refresh_with_backfill(d)
                 elif force_manual:
                     msg = _force_refresh_for_date(d)
+                elif reason == "Auto refresh":
+                    msg = _auto_refresh_for_date(d)
                 else:
                     msg = _selective_refresh_for_date(d, manual_trigger=(reason == "Refreshing"))
             except Exception as e:
@@ -8758,12 +8838,15 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
                 nonlocal refresh_inflight
                 refresh_inflight = False
                 refresh_status_var.set(msg)
-                _render_day(force_rebuild=False)
-                if callable(on_data_refresh):
+                final_transition_seen = _render_day(force_rebuild=False)
+                if final_transition_seen and callable(on_data_refresh):
                     try:
-                        on_data_refresh()
+                        on_data_refresh({"reason": "game_final"})
                     except Exception:
-                        pass
+                        try:
+                            on_data_refresh()
+                        except Exception:
+                            pass
 
             try:
                 bgroot.after(0, _done)
@@ -8775,6 +8858,41 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
     def _manual_refresh() -> None:
         d = _selected_date()
         _run_refresh_async(d, force_manual=True, reason="Refreshing")
+
+    def _auto_refresh_for_date(d: dt.date) -> str:
+        t0 = time.perf_counter()
+        if _is_day_finalized(d):
+            return _format_refresh_status(
+                "Checked",
+                nhl_n=0,
+                olympics_n=0,
+                pwhl_n=0,
+                elapsed_s=(time.perf_counter() - t0),
+                target_date=d,
+            )
+
+        active_nhl_seen, active_olympics_seen, active_pwhl_seen = auto_refresh_active_sources
+        if not (active_nhl_seen or active_olympics_seen or active_pwhl_seen):
+            # Idle auto-refresh can still discover a game that just started.
+            return _selective_refresh_for_date(d, manual_trigger=False)
+
+        plan_nhl, _plan_olympics, _plan_pwhl = _planned_sources_for_date(d)
+        nhl_n, olympics_n, pwhl_n = _refresh_sources_for_date(
+            d,
+            refresh_nhl=bool(active_nhl_seen),
+            refresh_olympics=bool(active_olympics_seen),
+            refresh_pwhl=bool(active_pwhl_seen),
+            refresh_moneypuck=bool(plan_nhl and active_nhl_seen),
+        )
+        day_source_plan.pop(d, None)
+        return _format_refresh_status(
+            "Auto refreshed" if d == today else "Checked",
+            nhl_n=nhl_n,
+            olympics_n=olympics_n,
+            pwhl_n=pwhl_n,
+            elapsed_s=(time.perf_counter() - t0),
+            target_date=d,
+        )
 
     def _selective_refresh_for_date(d: dt.date, *, manual_trigger: bool = False) -> str:
         t0 = time.perf_counter()
@@ -8866,15 +8984,19 @@ def build_games_tab(parent: tk.Widget, ctx: dict[str, Any]) -> ttk.Frame:
             refresh_moneypuck = bool(manual_trigger and plan_nhl and nhl_regular)
         else:
             # Auto-refresh follows the same source refresh flow as manual refresh,
-            # but only for sources that are active (or should now be active).
-            refresh_nhl = (plan_nhl and nhl_needs) or (plan_olympics and olympics_needs and olympics_from_nhl_fallback)
-            refresh_olympics = plan_olympics and olympics_needs
-            refresh_pwhl = plan_pwhl and pwhl_needs
-            has_live_clock_nhl = any(_is_live_clock_running(g) for g in nhl_regular if isinstance(g, dict))
+            # but every source that was active on the last render is forced
+            # again so a stale cache read cannot skip an auto-refresh tick.
+            active_nhl_seen, active_olympics_seen, active_pwhl_seen = auto_refresh_active_sources
+            refresh_nhl = (
+                (plan_nhl and (nhl_needs or active_nhl_seen))
+                or (plan_olympics and (olympics_needs or active_olympics_seen) and olympics_from_nhl_fallback)
+            )
+            refresh_olympics = plan_olympics and (olympics_needs or active_olympics_seen)
+            refresh_pwhl = plan_pwhl and (pwhl_needs or active_pwhl_seen)
             refresh_moneypuck = (
                 plan_nhl
                 and bool(nhl_regular)
-                and (manual_trigger or has_live_clock_nhl)
+                and (manual_trigger or nhl_needs or active_nhl_seen)
             )
 
         nhl_n, olympics_n, pwhl_n = _refresh_sources_for_date(

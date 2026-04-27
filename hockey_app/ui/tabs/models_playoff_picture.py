@@ -422,13 +422,10 @@ def populate_playoff_picture_tab(
         logos_only: bool = False,
         state_hint: str = "",
     ) -> None:
-        is_eliminated = state_hint == "eliminated"
         if not logos_only:
             fill = "#2a2a2a"
             if state_hint == "clinched":
                 fill = "#234123"
-            elif state_hint == "eliminated":
-                fill = "#3a3a3a"
             canvas.create_rectangle(x, y, x + w, y + h, fill=fill, outline="#3a3a3a", tags=("bracket_bg",))
         if not code:
             return
@@ -441,7 +438,7 @@ def populate_playoff_picture_tab(
             logo_bank=logo_bank,
             league=league_u,
             master=canvas,
-            dim=is_eliminated,
+            dim=(state_hint == "eliminated"),
         )
         img = probe
         if probe is not None:
@@ -456,9 +453,9 @@ def populate_playoff_picture_tab(
                 logo_bank=logo_bank,
                 league=league_u,
                 master=canvas,
-                dim=is_eliminated,
+                dim=(state_hint == "eliminated"),
             )
-        txt_fill = "#9e9e9e" if is_eliminated else "#f0f0f0"
+        txt_fill = "#f0f0f0"
         if logos_only:
             if img is not None:
                 live_imgs.append(img)

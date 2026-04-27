@@ -20,6 +20,22 @@ TkImg: TypeAlias = Any
 RawImg: TypeAlias = Any
 
 
+def _apply_dim_rgba(img: RawImg, dim_amt: float) -> RawImg:
+    if not PIL_OK:
+        return img
+    amt = max(0.0, min(1.0, float(dim_amt)))
+    if amt >= 0.999:
+        return img
+    try:
+        out = img.copy()
+        alpha = out.getchannel("A")
+        alpha = alpha.point(lambda px: int(round(float(px) * amt)))
+        out.putalpha(alpha)
+        return out
+    except Exception:
+        return img
+
+
 class LogoBank:
     """
     Loads original PNGs once and returns resized Tk images on demand.
@@ -100,9 +116,6 @@ class LogoBank:
             return None
 
     def get(self, code: str, height: int, dim: bool = False, dim_amt: float = 0.55) -> TkImg | None:
-        # Global policy: always render original RGBA logo pixels.
-        # Ignore dim requests so internal white details are never blended away.
-        dim = False
         code = self._canon_team_code(code)
         h = int(max(1, height))
         dim_key = int(round(float(dim_amt) * 100))
@@ -128,6 +141,8 @@ class LogoBank:
                 except Exception:
                     resample = Image.LANCZOS  # type: ignore
                 out = raw.resize((w, h), resample=resample)
+                if dim:
+                    out = _apply_dim_rgba(out, dim_amt)
 
                 tkimg = ImageTk.PhotoImage(out)  # type: ignore
                 self._tk_cache[key] = tkimg

@@ -80,7 +80,7 @@ def load_points_history(league: str = "NHL") -> tuple[pd.DataFrame, dt.date, dt.
             df, _ = _build_points_df_pwhl(pwhl_api, d0, d1)
         else:
             api = NHLApi(cache)
-            df, _ = _build_points_df(api, d0, d1)
+            df, _ = _build_points_df(api, d0, d1, phase="Regular Season")
         if not df.empty and len(df.columns) > 0:
             try:
                 cache.set_json(
@@ -145,6 +145,39 @@ def regular_season_reference_day(day: dt.date, *, league: str = "NHL") -> dt.dat
     if isinstance(regular_end, dt.date) and day > regular_end:
         return regular_end
     return day
+
+
+def playoffs_have_started(day: dt.date, *, league: str = "NHL") -> bool:
+    league_u = str(league or "NHL").upper()
+    if league_u != "NHL":
+        return False
+    return day > regular_season_reference_day(day, league=league_u)
+
+
+def playoff_field_order(day: dt.date, *, league: str = "NHL") -> list[str]:
+    league_u = str(league or "NHL").upper()
+    if league_u != "NHL" or not playoffs_have_started(day, league=league_u):
+        return []
+
+    df, _d0, _d1 = load_points_history(league=league_u)
+    seed_day = regular_season_reference_day(day, league=league_u)
+    pts = points_snapshot(df, seed_day)
+    if not pts:
+        return []
+
+    standings = standings_tiebreak_snapshot(seed_day)
+    from hockey_app.ui.tabs.models_playoff_picture import _bracket_snapshot
+
+    bracket = _bracket_snapshot(pts, standings)
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for code in bracket.get("West_R1", []) + bracket.get("East_R1", []):
+        c = canon_team_code(str(code))
+        if not c or c in seen:
+            continue
+        seen.add(c)
+        ordered.append(c)
+    return ordered
 
 
 def standings_tiebreak_snapshot(day: dt.date) -> dict[str, dict[str, Any]]:

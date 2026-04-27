@@ -8,7 +8,9 @@ from zoneinfo import ZoneInfo
 
 from hockey_app.data.xml_cache import _status_time_sort_value, _xml_season_dir, read_games_day_xml, write_games_day_xml
 from hockey_app.ui.tabs.games import (
+    _game_sort_key,
     _live_status,
+    _merge_games_by_id,
     _parse_status_time_local,
     _preserve_cached_game_rows,
     _promote_live_game_row_from_gamecenter,
@@ -52,6 +54,84 @@ class GamesCachePreserveTests(unittest.TestCase):
         self.assertTrue(first)
         self.assertTrue(second)
         self.assertLess(first, second)
+
+    def test_pwhl_sort_key_uses_scheduled_start_not_live_status_text(self) -> None:
+        tz = ZoneInfo("America/New_York")
+        selected_date = dt.date(2026, 4, 25)
+        early_live = {
+            "id": 101,
+            "league": "PWHL",
+            "gameState": "LIVE",
+            "startTimeUTC": "2026-04-25T17:00:00Z",
+            "statusText": "3RD - 0:41",
+            "awayTeam": {"abbrev": "MON"},
+            "homeTeam": {"abbrev": "TOR"},
+        }
+        later_future = {
+            "id": 102,
+            "league": "PWHL",
+            "gameState": "FUT",
+            "startTimeUTC": "2026-04-25T19:00:00Z",
+            "statusText": "7:00 PM EDT",
+            "awayTeam": {"abbrev": "OTT"},
+            "homeTeam": {"abbrev": "MIN"},
+        }
+
+        self.assertLess(
+            _game_sort_key(early_live, tz, selected_date),
+            _game_sort_key(later_future, tz, selected_date),
+        )
+
+    def test_pwhl_sort_key_does_not_fall_back_to_status_text_when_start_missing(self) -> None:
+        tz = ZoneInfo("America/New_York")
+        selected_date = dt.date(2026, 4, 25)
+        missing_start = {
+            "id": 201,
+            "league": "PWHL",
+            "statusText": "12:30 PM EDT",
+            "awayTeam": {"abbrev": "MON"},
+            "homeTeam": {"abbrev": "TOR"},
+        }
+        scheduled = {
+            "id": 202,
+            "league": "PWHL",
+            "startTimeUTC": "2026-04-25T19:00:00Z",
+            "statusText": "7:00 PM EDT",
+            "awayTeam": {"abbrev": "OTT"},
+            "homeTeam": {"abbrev": "MIN"},
+        }
+
+        self.assertGreater(
+            _game_sort_key(missing_start, tz, selected_date),
+            _game_sort_key(scheduled, tz, selected_date),
+        )
+
+    def test_merge_games_by_id_prefers_parseable_scheduled_start(self) -> None:
+        merged = _merge_games_by_id(
+            [
+                {
+                    "id": 210,
+                    "league": "PWHL",
+                    "startTimeUTC": "TBD",
+                    "statusText": "Final",
+                    "awayTeam": {"abbrev": "NY"},
+                    "homeTeam": {"abbrev": "BOS"},
+                }
+            ],
+            [
+                {
+                    "id": 210,
+                    "league": "PWHL",
+                    "startTimeUTC": "2026-04-25T17:00:00Z",
+                    "statusText": "1:00 PM EDT",
+                    "awayTeam": {"abbrev": "NY"},
+                    "homeTeam": {"abbrev": "BOS"},
+                }
+            ],
+        )
+
+        self.assertEqual(len(merged), 1)
+        self.assertEqual(merged[0].get("startTimeUTC"), "2026-04-25T17:00:00Z")
 
     def test_xml_round_trip_preserves_live_clock_period_and_shots(self) -> None:
         season = f"test-live-{uuid.uuid4().hex}"
@@ -112,6 +192,29 @@ class GamesCachePreserveTests(unittest.TestCase):
         self.assertEqual(out.get("clock"), {"timeRemaining": "8:41"})
         self.assertEqual(out.get("periodDescriptor"), {"number": 3})
         self.assertEqual(_live_status(out), "3RD - 8:41")
+
+    def test_live_gamecenter_promotion_preserves_score_feed_clock(self) -> None:
+        game = {
+            "id": 2026020001,
+            "gameState": "LIVE",
+            "statusText": "Live",
+            "clock": {"timeRemaining": "5:12"},
+            "periodDescriptor": {"number": 2},
+            "awayTeam": {"abbrev": "BUF", "score": 2},
+            "homeTeam": {"abbrev": "TBL", "score": 1},
+        }
+        pbp = {
+            "gameState": "LIVE",
+            "clock": {"timeRemaining": "8:41"},
+            "periodDescriptor": {"number": 3},
+            "plays": [],
+        }
+
+        out = _promote_live_game_row_from_gamecenter(game, pbp=pbp)
+
+        self.assertEqual(out.get("clock"), {"timeRemaining": "5:12"})
+        self.assertEqual(out.get("periodDescriptor"), {"number": 2})
+        self.assertEqual(_live_status(out), "2ND - 5:12")
 
 
 if __name__ == "__main__":

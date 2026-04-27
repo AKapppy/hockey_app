@@ -241,7 +241,6 @@ def populate_playoff_win_probabilities_tab(
             pred = str(sr["pred"])
             a_elim = status_map.get(a) == "eliminated"
             b_elim = status_map.get(b2) == "eliminated"
-
             top_y = y_loc
             c.create_rectangle(x_base, top_y, x_base + cols[0][1], top_y + row_h * 2, fill="#2a2a2a", outline="#3a3a3a")
             series_x0 = x_base
@@ -278,9 +277,7 @@ def populate_playoff_win_probabilities_tab(
             for team, probs, ry, eliminated in row_defs:
                 p4, p5, p6, p7 = probs
                 tx0 = x_base + cols[0][1]
-                team_fill = "#3a3a3a" if eliminated else "#2a2a2a"
-                text_fill = "#9e9e9e" if eliminated else "#f0f0f0"
-                c.create_rectangle(tx0, ry, tx0 + cols[1][1], ry + row_h, fill=team_fill, outline="#3a3a3a")
+                c.create_rectangle(tx0, ry, tx0 + cols[1][1], ry + row_h, fill="#2a2a2a", outline="#3a3a3a")
                 img = get_model_logo(
                     team,
                     height=20,
@@ -293,14 +290,14 @@ def populate_playoff_win_probabilities_tab(
                     live_imgs.append(img)
                     c.create_image(tx0 + cols[1][1] / 2, ry + row_h / 2, image=img, anchor="center")
                 else:
-                    c.create_text(tx0 + cols[1][1] / 2, ry + row_h / 2, text=team, fill=text_fill, anchor="center", font=cell_font)
+                    c.create_text(tx0 + cols[1][1] / 2, ry + row_h / 2, text=team, fill="#f0f0f0", anchor="center", font=cell_font)
 
                 x2 = tx0 + cols[1][1]
                 for val, (_name, w) in zip((p4, p5, p6, p7), cols[2:6]):
                     impossible = val <= 0.0
-                    fill = "#3a3a3a" if eliminated else ("#353535" if impossible else (_heat_rank01(val / series_max) if series_max > 0 else _heat_rank01(0.0)))
+                    fill = "#353535" if impossible else (_heat_rank01(val / series_max) if series_max > 0 else _heat_rank01(0.0))
                     c.create_rectangle(x2, ry, x2 + w, ry + row_h, fill=fill, outline="#3a3a3a")
-                    txt_fill = "#888888" if eliminated else ("#9a9a9a" if impossible else "#f0f0f0")
+                    txt_fill = "#9a9a9a" if impossible else "#f0f0f0"
                     c.create_text(x2 + w / 2, ry + row_h / 2, text=pct_txt(val), fill=txt_fill, anchor="center", font=cell_font)
                     x2 += w
             y_loc += row_h * 2

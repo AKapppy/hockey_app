@@ -34,6 +34,11 @@ OUTCOME_RANK: dict[str, int] = {
     "": 0,
 }
 
+
+def _phase_auto_scrolls_latest(phase: str) -> bool:
+    return str(phase or "").strip().lower() != "postseason"
+
+
 def _hex_to_rgb(h: str) -> tuple[int, int, int]:
     h = h.lstrip("#")
     return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
@@ -365,6 +370,16 @@ def populate_game_stats_tab(
             )
         return rows
 
+    def _phase_visible_rows(rows: list[dict[str, str]], date_cols: list[str]) -> list[dict[str, str]]:
+        if str(state.get("phase") or "") != "postseason":
+            return rows
+        visible = [
+            row
+            for row in rows
+            if any(str(row.get(col, "")).strip() for col in date_cols)
+        ]
+        return visible if visible else rows
+
     def _row_fill_for_selection(team: str) -> str:
         sel = str(get_selected_team_code() or "").upper()
         if sel and team.upper() == sel:
@@ -418,6 +433,7 @@ def populate_game_stats_tab(
         table = phase_tables.get(str(state["phase"])) or {"date_cols": [], "rows": []}
         date_cols = list(table.get("date_cols") or [])
         rows = _rows_sorted(list(table.get("rows") or []), date_cols)
+        rows = _phase_visible_rows(rows, date_cols)
         state["rows"] = rows
         state["date_cols_live"] = date_cols
         state["games_by_team_col"] = table.get("games_by_team_col") or {}
@@ -822,13 +838,13 @@ def populate_game_stats_tab(
         state["phase"] = ph
         state["sort_col"] = "team"
         state["desc"] = False
-        state["stick_latest"] = True
+        state["stick_latest"] = _phase_auto_scrolls_latest(ph)
         _render()
 
     for ph, b in btns.items():
         b.bind("<Button-1>", lambda _e, p=ph: _set_phase(p), add="+")
 
-    state["stick_latest"] = True
+    state["stick_latest"] = _phase_auto_scrolls_latest(state["phase"])
     _render()
 
     def redraw() -> None:

@@ -371,12 +371,22 @@ def read_games_day_xml(*, season: str, day: dt.date) -> list[dict[str, Any]]:
     return out
 
 
-def write_table_xml(*, season: str, lump: str, league: str, start: dt.date, end: dt.date, df: pd.DataFrame) -> Path:
+def write_table_xml(
+    *,
+    season: str,
+    lump: str,
+    league: str,
+    start: dt.date,
+    end: dt.date,
+    df: pd.DataFrame,
+    phase: str | None = None,
+) -> Path:
     path = _xml_path(season, lump)
     tree, root = _read_or_new(path)
     root.set("season", str(season))
     root.set("lump", str(lump))
     root.set("league", str(league).upper())
+    root.set("phase", _to_text(phase))
     root.set("start", start.isoformat())
     root.set("end", end.isoformat())
     root.set("updated_at", _now_iso())
@@ -405,7 +415,13 @@ def write_table_xml(*, season: str, lump: str, league: str, start: dt.date, end:
     return path
 
 
-def read_table_xml(*, season: str, lump: str, league: str | None = None) -> Optional[pd.DataFrame]:
+def read_table_xml(
+    *,
+    season: str,
+    lump: str,
+    league: str | None = None,
+    phase: str | None = None,
+) -> Optional[pd.DataFrame]:
     path = _xml_path(season, lump)
     if not path.exists():
         return None
@@ -417,6 +433,10 @@ def read_table_xml(*, season: str, lump: str, league: str | None = None) -> Opti
     if league:
         xml_league = _to_text(root.get("league")).upper()
         if xml_league and xml_league != str(league).upper():
+            return None
+    if phase:
+        xml_phase = _to_text(root.get("phase"))
+        if xml_phase and xml_phase != str(phase):
             return None
     col_nodes = sorted((root.find("columns") or ET.Element("columns")).findall("col"), key=lambda n: _to_int(n.get("idx")) or 0)
     columns = [str(node.get("label") or "") for node in col_nodes]
@@ -582,6 +602,7 @@ def write_player_stats_xml(*, season: str, league: str, payload: dict[str, Any])
     root.set("season", str(season))
     root.set("lump", "player_stats")
     root.set("league", str(league).upper())
+    root.set("phase", _to_text(payload.get("phase")))
     root.set("date", _to_text(payload.get("date")))
     root.set("updated_at", _to_text(payload.get("updated")) or _now_iso())
     for node in list(root):
@@ -603,7 +624,7 @@ def write_player_stats_xml(*, season: str, league: str, payload: dict[str, Any])
     return path
 
 
-def read_player_stats_xml(*, season: str, league: str | None = None) -> Optional[dict[str, Any]]:
+def read_player_stats_xml(*, season: str, league: str | None = None, phase: str | None = None) -> Optional[dict[str, Any]]:
     path = _xml_path(season, "player_stats")
     if not path.exists():
         return None
@@ -616,7 +637,18 @@ def read_player_stats_xml(*, season: str, league: str | None = None) -> Optional
         xml_league = _to_text(root.get("league")).upper()
         if xml_league and xml_league != str(league).upper():
             return None
-    out: dict[str, Any] = {"date": _to_text(root.get("date")), "league": _to_text(root.get("league")).upper(), "updated": _to_text(root.get("updated_at")), "skaters": {}, "goalies": {}}
+    if phase:
+        xml_phase = _to_text(root.get("phase"))
+        if xml_phase and xml_phase != str(phase):
+            return None
+    out: dict[str, Any] = {
+        "date": _to_text(root.get("date")),
+        "league": _to_text(root.get("league")).upper(),
+        "phase": _to_text(root.get("phase")),
+        "updated": _to_text(root.get("updated_at")),
+        "skaters": {},
+        "goalies": {},
+    }
     for group in root.findall("group"):
         group_name = _to_text(group.get("name"))
         if group_name not in {"skaters", "goalies"}:
